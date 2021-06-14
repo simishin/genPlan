@@ -1,0 +1,46 @@
+
+$ class InGuid beg 61 $
+MainClaims **null
+MainClaims ***null
+file:572313	[0]	~C:\simish\genPlan\listprj.ini
+$
+BgFile> uploadDataExternalSources  298
+Внешних путей: 2  Зарегистрировано файлов:1
+P 	572313	0	Y	1	n	0	C:\simish\genPlan	null
+P 	572313	0	Y	999	n	0	titul	null
+-------------------------------
+Error directory is NOT >titul
+Стало зарегистрированных файлов:2
+Fn 	572313	0	Y	0	n	0	C:\simish\genPlan\listprj.ini	null	 > ini
+   Load string 1
+--->C:\simish\genPlan\firstprjFn 	572313	0	Y	1	n	0	C:\simish\genPlan\firstprj.cfg	null	 > cfg
+   Load string 8
+--->Файл конфигурации проекта--->TITUL	568237	21-01-21 13:54 (GMT+7)	568237	Computer~915-5	C:\simish\genPlan\firstprj--->PATHS	1--->PATHR	568237	0	Y	999	n	0	titul	null	* PATHR
+--->USERS	2--->USERI	0	0	Y	1	n	568237	915-5	This Computer	* USERI
+User is duble: 915-5
+--->USERI	568237	0	Y	2	n	0	form_Main_prozedur	null	* USERI
+Added user: form_Main_prozedur
+--->ENDFL	key	owner	solvd	typ	isusr	chang* ENDFL
+
+--- MainClaims ------------------------
+Fe 	572313	0	Y	0	n	0	C:\simish\genPlan\listprj.ini	null
+Fe 	572313	568237	Y	2	Y	568237	C:\simish\genPlan\firstprj	21-01-21 13:54 (GMT+7)
+*** Metod create ***
+ > add:572313~ddfg
+ false
+*** Metod create ***
+ true
+*** Metod create ***
+ > add:572314~dTest
+ false
+-------------------------------3
+user:1	[1]	~915-5
+user:572313	[2]	~ddfg
+user:572314	[2]	~dTest
+-------------------------------3
+path:572313	[1]	~C:\simish\genPlan
+path:572313	[999]	~titul
+path:568237	[999]	~titul
+-------------------------------2
+file:572313	[0]	~C:\simish\genPlan\listprj.ini
+file:572313	[2]	~C:\simish\genPlan\firstprj

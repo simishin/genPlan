@@ -1,0 +1,953 @@
+
+javarush.ru
+Arraylist в Java (конструкторы, методы)
+10-13 минут
+
+При разработке часто бывает сложно предсказать, какого размера понадобятся массивы. Поэтому функция динамического выделения памяти во время работы программы необходима каждому языку программирования. Динамическим называется массив, размер которого может измениться во время исполнения программы. В Java для такой цели существует класс ArrayList.
+
+    Конструкторы ArrayList
+    Методы ArrayList
+
+Что такое класс ArrayList?
+
+ArrayList — реализация изменяемого массива интерфейса List, часть Collection Framework, который отвечает за список (или динамический массив), расположенный в пакете java.utils. Этот класс реализует все необязательные операции со списком и предоставляет методы управления размером массива, который используется для хранения списка. В основе ArrayList лежит идея динамического массива. А именно, возможность добавлять и удалять элементы, при этом будет увеличиваться или уменьшаться по мере необходимости.
+Что хранит ArrayList?
+
+Только ссылочные типы, любые объекты, включая сторонние классы. Строки, потоки вывода, другие коллекции. Для хранения примитивных типов данных используются классы-обертки.
+Конструкторы ArrayList
+
+    ArrayList()     Пустой конструктор с начальной емкостью внутреннего массива = 10.
+    ArrayList<String> list = new ArrayList<>(); В угловых скобках желательно указать тип хранимых значений. В примере выше — String.
+    ArrayList(Collection <? extends E> c) Конструктор принимает другую коллекцию, создавая новый массив с элементами переданной коллекции:
+    ArrayList<String> list2 = new ArrayList<>(list); Порядок элементов в новом списке будет совпадать с исходным.
+    ArrayList(int initialCapacity) В качестве параметра конструктора выступает значения начального размера внутреннего массива.
+    ArrayList<String> list2 = new ArrayList<>(10000); Если в массиве, который лежит в основе ArrayList, закончилось место при добавлении новых элементов, создается новый массив большего размера, и данные копируются в него. Если при написании кода заранее известно, что в массиве будет обрабатываться большое количество элементов, в целях оптимизации следует указать большее значение.
+Методы ArrayList
+    Ниже представлены основные методы ArrayList.
+    add(E e)    Добавляет новый элемент в конец списка. Возвращает boolean-значение (true — успех, false — не добавлено):
+
+    ArrayList<String> list = new ArrayList<>();
+    list.add("Hello");
+
+    add(int index, E element)  Добавляет элемент element в позицию index. При добавлении происходит сдвиг всех элементов справа от указанного индекса на 1 позицию вправо:
+    list.add(0, "Amigo"); Очень полезен, когда нужно вставить элемент в произвольное место списка, однако для частых операций вставки в начало и середину ArrayList может оказаться не очень удачным выбором — следует изучить LinkedList.
+    addAll(Collection <? extends E> collection) Добавление всех элементов коллекции collection в список в порядке их расположения в collection.
+    addAll(int index, Collection <? extends E> collection) Добавление всех элементов collection в список начиная с индекса index. При этом все элементы сдвинутся вправо на количество элементов в списке collection:
+
+    ArrayList<String> secondList = new ArrayList<>();
+    secondList.addAll(list);
+    System.out.println("Первое добавление: " + secondList);
+    secondList.addAll(1, list);
+    System.out.println("Второе добавление в середину: " + secondList);
+    Вывод:
+    Первое добавление: [Amigo, Hello]
+    Второе добавление в середину: [Amigo, Amigo, Hello, Hello]
+
+    Методы addAll() также возвращают boolean-результат добавления элементов.
+
+    clear()    Удаление всех элементов из списка.
+    clone()    Возвращает объект-копию массива:
+
+    ArrayList<String> copyOfSecondList = (ArrayList<String>) secondList.clone();
+    secondList.clear();
+    System.out.println(copyOfSecondList);
+    Вывод:
+    [Amigo, Amigo, Hello, Hello]
+
+    Следует обратить внимание, что метод clone() возвращает Object, так что после его вызова потребуется сделать приведение к необходимому классу.
+    При клонировании создается новый независимый объект. В примере показано, как очищение клонированного объекта не сказалось на составе его клона.
+
+    contains(Object o) Проверка наличие объекта в списке, возвращает boolean-значение.
+
+    System.out.println(copyOfSecondList.contains("Hello"));
+    System.out.println(copyOfSecondList.contains("Check"));
+    Вывод:
+    true
+    false
+
+    ensureCapacity(int minCapacity)  Увеличивает размер внутреннего массива, чтобы в него поместилось количество элементов, переданных в minCapacity. Если массив достаточно вместителен, никакие преобразования не производятся.
+        Этот метод полезен, когда возникает потребность вместить большое количество элементов в несколько итераций. Например, при создании списка емкость его внутреннего массива — 10. При загрузке данных по сети они обрабатываются асинхронно порциями и результаты помещаются в массив. Если ожидается доставка 10 000 элементов, может быть неэффективно просто добавлять эти данные каждый раз: достаточно будет в начале обработки вызвать метод ensureCapaciry(10000) и записывать туда данные по мере необходимости.
+    forEach(Consumer<? super E> action)  Обработать в цикле ArrayList можно стандартными способами, цикл for:
+
+    for(int i = 0; i< secondList.size(); i++) {
+       System.out.println(secondList.get(i));
+    }
+    И цикл for-each:
+
+    for(String s : secondList) {
+       System.out.println(s);
+    }
+
+    В классе ArrayList есть метод для обработки каждого элемента, который называется также, forEach. В качестве аргумента передается реализация интерфейса Consumer, в котором нужно переопределить метод accept():
+
+    secondList.forEach(new Consumer<String>() {
+       @Override
+       public void accept(String s) {
+           System.out.println(s);
+       }
+    });
+    Вывод:
+    Amigo
+    Amigo
+    Hello
+    Hello
+
+    Метод accept принимает в качестве аргумента очередной элемент того типа, который хранит в себе ArrayList. Пример для Integer:
+
+    ArrayList<Integer> integerList = new ArrayList<>();
+    integerList.forEach(new Consumer<Integer>() {
+       @Override
+       public void accept(Integer integer) {
+           System.out.println(integer);
+       }
+    });
+
+    Метод action() будет выполнен для каждого элемента.
+
+    get(int index) Возвращает элемент, который расположен в указанной позиции списка.
+        Если index < 0 или index >= максимального количества элементов списка, будет выброшено исключение IndexOutOfBoundsException.
+        Это основной метод получения элемента из списка, время извлечения элемента по индексу всегда будет одинаковым, независимо от размера ArrayList.
+    indexOf(Object o)  Метод возвращает индекс первого вхождения элемента в списке. Если элемента не существует в списке, метод вернет -1.
+    isEmpty() Метод возвращает true, если список пустой, false в обратном случае.
+        Если в списке содержатся только элементы null, метод вернет false. Иными словами, null элементы также учитываются этим методом.
+    iterator()  Возвращает итератор для списка для последующего использования в цикле или при любой другой обработке.
+        Итератор для ArrayList — fail-fast. Это значит, что если коллекция изменится во время итерации, будет выброшено исключение ConcurrentModificationException. Подробнее об fail-fast и его противоположности fail-safe можно почитать здесь.
+    lastIndexOf(Object o)  Функционал метода похож на indexOf(), отличие в том, что возвращается индекс последнего элемента в списке.
+        Если элемент не найден, также возвращает -1.
+    remove(int index)  Удаление элемента в указанной позиции индекса. После удаления сдвигает все элементы влево для заполнения освободившегося пространства.
+        Если index<0 или >= количество элементов списка, будет выброшено исключение IndexOutOfBoundsException. В результате метод возвращает элемент, который был удален.
+    remove(Object o) Метод удаляет из списка переданный элемент o. Если элемент присутствует в списке, он удаляется, а все элементы смещаются влево. Если элемент существует в списке и успешно удален, метод возвращает true, в обратном случае — false.
+    removeAll(Collection<?> c) Если необходимо удалить несколько элементов, не стоит делать это в цикле по условию: гораздо удобнее и безопаснее воспользоваться методом removeAll(). Он принимает коллекцию элементов, которая будет удалена из списка.
+        Коллекция должна содержать элементы того же типа, которые хранит целевой список. В обратном случае будет выброшен ClassCastException. Метод вернет true, если список был изменен в результате вызова метода.
+    set(int index, E element)  Замена элемента в указанной позиции index на переданный element. Индекс также должен быть больше нуля и меньше индекса последнего элемента, иначе будет выброшено исключение IndexOutOfBoundsException.
+    size() Лучший способ (практически единственный) для того, чтобы узнать размер массива.
+    sort(Comparator<? super E> c) Сортировка списка по заданному правилу. Правило сортировки представляет собой реализованный интерфейс Comparator с переопределенным методом compareTo().
+        Переопределение нужно, если коллекция содержит объекты собственного класса. При работе со стандартными классами (Integer, String и так далее) переопределение compareTo() требуется только для нестандартной сортировки.
+    toArray()  Превращает список в фиксированный массив. Обратите внимание, что метод возвращает массив объектов (Object[]). Если необходимо привести список в массив объектов определенного типа, в качестве параметра в метод можно передать массив, куда будут перемещены элементы списков.
+    Пример:
+
+    String[] array = new String[secondList.size()];
+    secondList.toArray(array);
+    for(int i = 0; i< array.length; i++) {
+       System.out.println(array[i]);
+    }
+    Вывод:
+    Amigo
+    Amigo
+    Hello
+    Hello
+
+Методы ArrayList в Java изучаются на курсе JavaRush. Первое знакомство происходит на седьмом уровне квеста Java Syntax, на лекции “Класс ArrayList”. На этом же уровне есть подборки задач — раз и два, в которых нужно использовать методы ArrayList, приведены дополнительные примеры работы с ArrayList и дженериками, а также объясняется разница между ArrayList и LinkedList. Это обширная тема изучения, поэтому в том или ином виде к Arraylist в Java (методы этого класса — лишь часть всего массива знаний, в который стоит углубиться) на курсе возвращаются и на следующих уровнях обучения — Core, Collections, Multithreading. Мы верим, что ежедневная практика написания кода — главный ключ к успеху в программировании. Поэтому JavaRush на 80% состоит из практических задач, мини проектов, задач-игр. Все это — сотни часов кодинга, которые помогут прокачать скилл. ArrayList в Java - 2
+Ссылки на дополнительное чтение
+
+    Подробная статья о динамических массивах, а точнее — об ArrayList и LinkedList, которые выполняют их роль в языке Java.
+    Статья об удалении элементов из списка ArrayList.
+    Лекция о работе с ArrayList в схемах и картинках.
+
+//*************************************************************************
+
+HashMap в Java — это реализация структуры данных хэш-таблицы (пары ключ-значение, словарь) интерфейса Map, являющейся частью структуры Java Collections.
+Реализации HashMap в Java Collections Framework
+
+HashMap имеет следующие особенности:
+
+    Коэффициент загрузки по умолчанию и начальная мощность 0,75 и 16 соответственно. Их значения важны для производительности HashMap, поскольку они могут оптимизировать производительность итераций и количество операций изменения размера и повторного хеширования.
+    Нет гарантий порядка итераций.
+    Производительность итерации зависит от начальной емкости (количества сегментов) плюс количества записей. Таким образом, очень важно не устанавливать слишком высокую начальную мощность (или слишком низкий коэффициент загрузки).
+    Никаких повторяющихся ключей. Разрешает один нулевой ключ и несколько нулевых значений.
+    Проблема коллизии хэша решена за счет использования древовидной структуры данных, начиная с Java 8, для обеспечения отдельной цепочки.
+    Предлагает постоянное время O (1) в среднем и линейное время O (n) в худшем случае производительность для основных операций, таких как получение, размещение и удаление.
+    Чем меньше повторяющихся хэш-кодов, тем выше прирост производительности для вышеуказанных операций.
+    Ключевые объекты сравниваются на основе их равенства и реализации hashCode.
+    Объекты значений сравниваются на основе реализации их метода равенства.
+    HashMap не является потокобезопасным, поскольку это несинхронизированная реализация.
+    В многопоточном окружении хотя бы один поток изменяет карту, она должна быть синхронизирована извне.
+
+Давайте пройдемся по этому руководству, чтобы изучить их более подробно.
+HashMap против LinkedHashMap и TreeMap
+
+HashMap не имеет гарантий упорядочивания и работает быстрее, чем TreeMap (постоянное время по сравнению с временем журнала для большинства операций)
+
+LinkedHashMap обеспечивает итерацию с упорядоченной вставкой и работает почти так же быстро, как HashMap.
+
+TreeMap обеспечивает итерацию по порядку значений. TreeMap можно использовать для сортировки HashMap или LinkedHashMap
+Объявление HashMap
+
+В результате иерархии классов вы можете объявить HashMap следующими способами:
+@Test
+public void declare() {
+    Map<String, Integer> map1 = new HashMap<>();
+    assertThat(map1).isInstanceOf(HashMap.class);
+    HashMap<String, Integer> map2 = new HashMap<>();
+}
+Создание и инициализация
+
+Предоставьте фабричный метод Map.of или Map.ofEntries, начиная с Java 9, в конструктор HashMap (Map) для создания и инициализации HashMap в одной строке во время создания.
+@Test
+public void initInOneLineWithFactoryMethods() {
+    // create and initialize a HashMap from Java 9+ Map.of
+    Map<String, Integer> map1 = new HashMap<>((Map.of("k1", 1, "k3", 2, "k2", 3)));
+    assertThat(map1).hasSize(3);
+    // create and initialize a HashMap from Java 9+ Map.ofEntries
+    Map<String, Integer> map2 = new HashMap<>(Map.ofEntries(Map.entry("k4", 4), Map.entry("k5", 5)));
+    assertThat(map2).hasSize(2);
+}
+
+Вы также можете инициализировать HashMap после времени создания, используя put, Java 8+ putIfAbsent, putAll.
+@Test
+public void initializeWithPutIfAbsent() {
+    // Create a new HashMap
+    Map<String, Integer> map = new HashMap<>();
+    // Add elements to HashMap
+    map.putIfAbsent("k1", 1);
+    map.putIfAbsent("k2", 2);
+    map.putIfAbsent("k3", 3);
+    // Can add null key and value
+    map.putIfAbsent(null, 4);
+    map.putIfAbsent("k4", null);
+    // Duplicate key will be ignored
+    map.putIfAbsent("k1", 10);
+    assertThat(map).hasSize(5);
+    // Порядок вывода будет варьироваться, так как HashMap не зарезервирован порядок вставки
+    System.out.println(map);
+}
+Итерация HashMap
+
+Вы можете перебирать пары ключ-значение HashMap, используя Java 8+ forEach (BiConsumer).
+@Test
+public void iterateOverKeyValuePairs() {
+    Map<String, Integer> map = new HashMap<>(Map.of("k1", 1, "k2", 2));
+    map.forEach((k, v) -> System.out.printf("%s=%d ", k, v));
+}
+
+Итерировать по HashMap keySet() или values() с Java 8+ forEach(Consumer).
+@Test
+public void iterateOverKeySet() {
+    Map<String, Integer> map = new HashMap<>(Map.of("k1", 1, "k2", 2));
+    map.keySet().forEach(k -> System.out.printf("%s ", k));
+}
+Получение и фильтрация
+
+Используйте entrySet(), keySet(), values(), чтобы получить набор записей сопоставления ключ-значение, набор ключей и набор значений соответственно.
+@Test
+public void retrieve() {
+    Map<String, Integer> hashMap = new HashMap<>(Map.of("k1", 1, "k2", 2));
+    Set<Map.Entry<String, Integer>> entrySet = hashMap.entrySet();
+    assertThat(entrySet).contains(Map.entry("k1", 1), Map.entry("k2", 2));
+    Set keySet = hashMap.keySet();
+    assertThat(keySet).contains("k1", "k2");
+    Collection values = hashMap.values();
+    assertThat(values).contains(1, 2);
+}
+
+Получить значение по указанному ключу с помощью get(key).
+@Test
+public void getValueByKey() {
+    Map<String, Integer> map = new HashMap<>(Map.of("k1", 1, "k2", 2));
+    int value = map.get("k1");
+    assertThat(value).isEqualTo(1);
+}
+
+Фильтрация ключей или значений HashMap с помощью Java 8+ Stream API.
+@Test
+public void filter() {
+    Map<String, Integer> map = new HashMap<>(Map.of("k1", 1, "k2", 2));
+    Integer[] arr = map.values().stream().filter(v -> v > 1).toArray(Integer[]::new);
+    assertThat(arr).contains(2);
+}
+Добавление, обновление и удаление
+
+HashMap предоставляет методы containsKey (ключ), containsValue (значение), put (ключ, значение), replace (ключ, значение) и remove (ключ), чтобы проверить, содержит ли HashMap указанный ключ или значение, чтобы добавить новый ключ. пара значений, обновить значение по ключу, удалить запись по ключу соответственно.
+@Test
+public void containsPutReplaceRemove() {
+    Map<String, Integer> map = new HashMap<>(Map.of("k1", 1, "k2", 2));
+    boolean containedKey = map.containsKey("k1");
+    assertThat(containedKey).isTrue();
+    boolean containedValue = map.containsValue(2);
+    assertThat(containedValue).isTrue();
+
+    map.put("k3", 3);
+    assertThat(map).hasSize(3);
+
+    map.replace("k1", 10);
+    assertThat(map).contains(Map.entry("k1", 10), Map.entry("k2", 2), Map.entry("k3", 3));
+
+    map.remove("k3");
+    assertThat(map).contains(Map.entry("k1", 10), Map.entry("k2", 2));
+}
+Сравнение объектов в HashMap
+
+Внутренне основные операции HashMap, такие как containsKey, containsValue, put, putIfAbsent, replace и remove, работают на основе сравнения объектов элементов, которые зависят от их равенства и реализации hashCode.
+
+В следующем примере ожидаемые результаты не достигаются из-за отсутствия реализации equals и hashCode для определенных пользователем объектов.
+hashMap.containsKey(new Category(1, "c1")) and hashMap.containsValue(new Book(1, "a")) should return true but false
+hashMap.put(new Category(1, "c1"), new Book(1, "a")) should not but success
+hashMap.replace(new Category(1, "c1"), new Book(2, "a")) and hashMap.remove(new Category(1, "c1")) should success but not
+@Test
+public void objectsComparingProblem(){
+    Map<Category, Book> hashMap = new HashMap<>();
+    hashMap.put(new Category(1, "c1"), new Book(1, "a"));
+    boolean containedKey = hashMap.containsKey(new Category(1, "c1"));
+    assertThat(containedKey).isFalse();
+    boolean containedValue = hashMap.containsValue(new Book(1, "a"));
+    assertThat(containedValue).isFalse();
+    hashMap.put(new Category(1, "c1"), new Book(1, "a"));
+    assertThat(hashMap).hasSize(2);
+    hashMap.remove(new Category(1, "c1"));
+    assertThat(hashMap).hasSize(2);
+}
+static class Category {
+    int id;
+    String name;
+    Category(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+}
+static class Book {
+    int id;
+    String title;
+    Book(int id, String title) {
+        this.id = id;
+        this.title = title;
+    }
+}
+
+Вы можете решить указанную выше проблему, переопределив equals и hashCode, как показано в примере ниже.
+@Test
+public void objectsComparingFixed(){
+    Map<CategoryFixed, BookFixed> hashMap = new HashMap<>();
+    hashMap.put(new CategoryFixed(1, "c1"), new BookFixed(1, "b1"));
+    boolean containedKey = hashMap.containsKey(new CategoryFixed(1, "c1"));
+    assertThat(containedKey).isTrue();
+    boolean containedValue = hashMap.containsValue(new BookFixed(1, "b1"));
+    assertThat(containedValue).isTrue();
+    hashMap.put(new CategoryFixed(1, "c1"), new BookFixed(1, "b1"));
+    assertThat(hashMap).hasSize(1);
+    BookFixed previousValue = hashMap.replace(new CategoryFixed(1, "c1"), new BookFixed(2, "b1"));
+    assertThat(previousValue).isNotNull();
+    hashMap.remove(new CategoryFixed(1, "c1"));
+    assertThat(hashMap).hasSize(0);
+}
+static class CategoryFixed {
+    int id;
+    String name;
+    CategoryFixed(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CategoryFixed that = (CategoryFixed) o;
+        return id == that.id &&
+                Objects.equals(name, that.name);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
+    }
+}
+static class BookFixed {
+    int id;
+    String title;
+    BookFixed(int id, String title) {
+        this.id = id;
+        this.title = title;
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BookFixed bookFixed = (BookFixed) o;
+        return id == bookFixed.id &&
+                Objects.equals(title, bookFixed.title);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, title);
+    }
+}
+Сортировка HashMap
+
+В Java нет прямого API для сортировки HashMap. Однако вы можете сделать это через TreeMap, TreeSet и ArrayList вместе с Comparable и Comparator.
+
+В следующем примере используются статические методы comparingByKey (Comparator) и comparingByValue (Comparator) для Map.Entry для сортировки ArrayList по ключам и по значениям соответственно. Этот ArrayList создается и инициализируется из entrySet() HashMap.
+
+@Test
+public void sortByKeysAndByValues_WithArrayListAndComparator() {
+Map.Entry e1 = Map.entry("k1", 1);
+Map.Entry e2 = Map.entry("k2", 20);
+Map.Entry e3 = Map.entry("k3", 3);
+
+Map map = new HashMap<>(Map.ofEntries(e3, e1, e2));
+
+List> arrayList1 = new ArrayList<>(map.entrySet());
+arrayList1.sort(comparingByKey(Comparator.naturalOrder()));
+assertThat(arrayList1).containsExactly(e1, e2, e3);
+
+List> arrayList2 = new ArrayList<>(map.entrySet());
+arrayList2.sort(comparingByValue(Comparator.reverseOrder()));
+assertThat(arrayList2).containsExactly(e2, e3, e1);
+}
+Ниже представлен полный пример исходного кода.
+
+package com.hellokoding.java.collections;
+
+import org.junit.Test;
+
+import java.util.*;
+
+import static java.util.Map.Entry.comparingByKey;
+import static java.util.Map.Entry.comparingByValue;
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class HashMapTest {
+@Test
+public void declare() {
+Map map1 = new HashMap<>();
+assertThat(map1).isInstanceOf(HashMap.class);
+
+HashMap map2 = new HashMap<>();
+}
+
+@Test
+public void initInOneLineWithFactoryMethods() {
+// create and initialize a HashMap from Java 9+ Map.of
+Map map1 = new HashMap<>((Map.of("k1", 1, "k3", 2, "k2", 3)));
+assertThat(map1).hasSize(3);
+
+// create and initialize a HashMap from Java 9+ Map.ofEntries
+Map map2 = new HashMap<>(Map.ofEntries(Map.entry("k4", 4), Map.entry("k5", 5)));
+assertThat(map2).hasSize(2);
+}
+
+@Test
+public void initializeWithPutIfAbsent() {
+// Create a new HashMap
+Map map = new HashMap<>();
+
+// Add elements to HashMap
+map.putIfAbsent("k1", 1);
+map.putIfAbsent("k2", 2);
+map.putIfAbsent("k3", 3);
+
+// Can add null key and value
+map.putIfAbsent(null, 4);
+map.putIfAbsent("k4", null);
+
+// Duplicate key will be ignored
+map.putIfAbsent("k1", 10);
+assertThat(map).hasSize(5);
+
+// The output ordering will be vary as HashMap is not reserved the insertion order
+System.out.println(map);
+}
+
+@Test
+public void iterateOverKeyValuePairs() {
+Map map = new HashMap<>(Map.of("k1", 1, "k2", 2));
+map.forEach((k, v) -> System.out.printf("%s=%d ", k, v));
+}
+
+@Test
+public void iterateOverKeySet() {
+Map map = new HashMap<>(Map.of("k1", 1, "k2", 2));
+map.values().forEach(k -> System.out.printf("%s ", k));
+}
+
+@Test
+public void retrieve() {
+Map hashMap = new HashMap<>(Map.of("k1", 1, "k2", 2));
+
+Set> entrySet = hashMap.entrySet();
+assertThat(entrySet).contains(Map.entry("k1", 1), Map.entry("k2", 2));
+
+Set keySet = hashMap.keySet();
+assertThat(keySet).contains("k1", "k2");
+
+Collection values = hashMap.values();
+assertThat(values).contains(1, 2);
+}
+
+@Test
+public void getValueByKey() {
+Map map = new HashMap<>(Map.of("k1", 1, "k2", 2));
+int value = map.get("k1");
+
+assertThat(value).isEqualTo(1);
+}
+
+@Test
+public void filter() {
+Map map = new HashMap<>(Map.of("k1", 1, "k2", 2));
+Integer[] arr = map.values().stream().filter(v -> v > 1).toArray(Integer[]::new);
+assertThat(arr).contains(2);
+}
+
+@Test
+public void containsPutReplaceRemove() {
+Map map = new HashMap<>(Map.of("k1", 1, "k2", 2));
+
+boolean containedKey = map.containsKey("k1");
+assertThat(containedKey).isTrue();
+
+boolean containedValue = map.containsValue(2);
+assertThat(containedValue).isTrue();
+
+map.put("k3", 3);
+assertThat(map).hasSize(3);
+
+map.replace("k1", 10);
+assertThat(map).contains(Map.entry("k1", 10), Map.entry("k2", 2), Map.entry("k3", 3));
+
+map.remove("k3");
+assertThat(map).contains(Map.entry("k1", 10), Map.entry("k2", 2));
+}
+
+@Test
+public void objectsComparingProblem(){
+Map hashMap = new HashMap<>();
+
+hashMap.put(new Category(1, "c1"), new Book(1, "b1"));
+
+boolean containedKey = hashMap.containsKey(new Category(1, "c1"));
+assertThat(containedKey).isFalse();
+
+boolean containedValue = hashMap.containsValue(new Book(1, "b1"));
+assertThat(containedValue).isFalse();
+
+hashMap.put(new Category(1, "c1"), new Book(1, "b1"));
+assertThat(hashMap).hasSize(2);
+
+Book previousValue = hashMap.replace(new Category(1, "c1"), new Book(2, "b1"));
+assertThat(previousValue).isNull();
+
+hashMap.remove(new Category(1, "c1"));
+assertThat(hashMap).hasSize(2);
+}
+
+static class Category {
+int id;
+String name;
+
+Category(int id, String name) {
+this.id = id;
+this.name = name;
+}
+}
+
+static class Book {
+int id;
+String title;
+
+Book(int id, String title) {
+this.id = id;
+this.title = title;
+}
+}
+
+@Test
+public void objectsComparingFixed(){
+Map hashMap = new HashMap<>();
+
+hashMap.put(new CategoryFixed(1, "c1"), new BookFixed(1, "b1"));
+
+boolean containedKey = hashMap.containsKey(new CategoryFixed(1, "c1"));
+assertThat(containedKey).isTrue();
+
+boolean containedValue = hashMap.containsValue(new BookFixed(1, "b1"));
+assertThat(containedValue).isTrue();
+
+hashMap.put(new CategoryFixed(1, "c1"), new BookFixed(1, "b1"));
+assertThat(hashMap).hasSize(1);
+
+BookFixed previousValue = hashMap.replace(new CategoryFixed(1, "c1"), new BookFixed(2, "b1"));
+assertThat(previousValue).isNotNull();
+
+hashMap.remove(new CategoryFixed(1, "c1"));
+assertThat(hashMap).hasSize(0);
+}
+
+static class CategoryFixed {
+int id;
+String name;
+
+CategoryFixed(int id, String name) {
+this.id = id;
+this.name = name;
+}
+
+@Override
+public boolean equals(Object o) {
+if (this == o) return true;
+if (o == null || getClass() != o.getClass()) return false;
+CategoryFixed that = (CategoryFixed) o;
+return id == that.id &&
+Objects.equals(name, that.name);
+}
+
+@Override
+public int hashCode() {
+return Objects.hash(id, name);
+}
+}
+
+static class BookFixed {
+int id;
+String title;
+
+BookFixed(int id, String title) {
+this.id = id;
+this.title = title;
+}
+
+@Override
+public boolean equals(Object o) {
+if (this == o) return true;
+if (o == null || getClass() != o.getClass()) return false;
+BookFixed bookFixed = (BookFixed) o;
+return id == bookFixed.id &&
+Objects.equals(title, bookFixed.title);
+}
+
+@Override
+public int hashCode() {
+return Objects.hash(id, title);
+}
+}
+
+@Test
+public void sortByKeysAndByValues_WithArrayListAndComparator() {
+Map.Entry e1 = Map.entry("k1", 1);
+Map.Entry e2 = Map.entry("k2", 20);
+Map.Entry e3 = Map.entry("k3", 3);
+
+Map map = new HashMap<>(Map.ofEntries(e3, e1, e2));
+
+List> arrayList1 = new ArrayList<>(map.entrySet());
+arrayList1.sort(comparingByKey(Comparator.naturalOrder()));
+assertThat(arrayList1).containsExactly(e1, e2, e3);
+
+List> arrayList2 = new ArrayList<>(map.entrySet());
+arrayList2.sort(comparingByValue(Comparator.reverseOrder()));
+assertThat(arrayList2).containsExactly(e2, e3, e1);
+}
+}
+
+//***********************************************************************
+//===================================================================================
+developer.alexanderklimov.ru
+Java. HashMap
+7-10 минут
+
+При работе с массивами я сравнивал их с коробочками. Слово HashMap содержит слово map
+— карта. Только это не пытайтесь найти сходство с картами в географическом атласе, с
+гуглокартами, с Яндекс.Картами или, на худой конец, с игральными картами.
+Это карточка в картотеке. Вы заполняете карточки какими-то данными и кладёте их в
+ящик. Если вы содержите гостиницу для котов, то скорее всего вы занесёте в карточку
+имя кота, возраст и т.п.
+
+Класс HashMap использует хеш-таблицу для хранения карточки, обеспечивая быстрое
+время выполнения запросов get() и put() при больших наборах. Класс реализует
+интерфейс Map (хранение данных в виде пар ключ/значение). Ключи и значения могут
+быть любых типов, в том числе и null. При этом все ключи обязательно должны быть
+уникальны, а значения могут повторяться. Данная реализация не гарантирует порядка
+элементов.
+
+Общий вид HashMap:
+class HashMap<K, V> // K - это Key (ключ), V - Value (значение)
+
+Объявить можно следующим образом:
+Map<String, Integer> hashMap = new HashMap<String, Integer>();
+// или так
+Map<String, String> hashMap = new HashMap<String, String>();
+
+По умолчанию при использовании пустого конструктора создается картотека ёмкостью
+из 16 ячеек. При необходимости ёмкость увеличивается, вам не надо об этом задумываться.
+
+Вы можете указать свои ёмкость и коэффициент загрузки, используя конструкторы
+HashMap(capacity) и HashMap(capacity, loadFactor). Максимальная ёмкость, которую вы
+сможете установить, равна половине максимального значения int (1073741824).
+
+Добавление элементов происходит при помощи метода put(K key, V value). Вам надо
+указать ключ и его значение.
+
+hashMap.put("0", "Васька");
+
+hashMap.size();                 // Узнаем размер:
+hashMap.containsKey("0");       // Проверяем ключ и значение на наличие:
+hashMap.containsValue("Васька");// Проверяем ключ и значение на наличие:
+
+Выбираем все ключи:
+for (String key : hashMap.keySet()) {
+    System.out.println("Key: " + key);
+}
+
+Выбираем все значения:
+for (int value : hashMap.values()) {
+    System.out.println("Value: " + value);
+}
+
+Выбираем все ключи и значения одновременно:
+for (Map.Entry entry : hashMap.entrySet()) {
+    System.out.println("Key: " + entry.getKey() + " Value: "
+        + entry.getValue());
+}
+
+Пример первый
+// Создадим хеш-карточку
+Map<String, Integer> hashMap = new HashMap<>();
+
+// Помещаем данные на карточку
+hashMap.put("Васька", 5);
+hashMap.put("Мурзик", 8);
+hashMap.put("Рыжик", 12);
+hashMap.put("Барсик", 5);
+
+// Получаем набор элементов
+Set<Map.Entry<String, Integer>> set = hashMap.entrySet();
+
+// Отобразим набор
+for (Map.Entry<String, Integer> me : set) {
+    System.out.print(me.getKey() + ": ");
+    System.out.println(me.getValue());
+}
+
+// Добавляем значение
+int value = hashMap.get("Рыжик");
+hashMap.put("Рыжик", value + 3);
+System.out.println("У Рыжика стало " + hashMap.get("Рыжик"));
+
+Если вы посмотрите на результат, то увидите, что данные находятся не в том порядке,
+в котором вы заносили. Второй важный момент - если в карточке уже существует какой-то
+ключ, то если вы помещаете в него новое значение, то ключ перезаписывается,
+а не заносится новый ключ.
+
+В древних версиях Java приходилось добавлять новые значения следующим образом.
+hashMap.put("Мурзик", new Integer(8));
+// или
+hashMap.put("Мурзик", Integer.valueOf(8));
+
+Потом Java поумнела и стала самостоятельно переводить число типа int в объект Integer.
+Но это не решило основной проблемы - использование объектов очень сильно сказывается
+на потреблении памяти. Поэтому в Android были предложены аналоги этого класса
+(см. ниже). Ключом в Map может быть любой объект, у которого корректно реализованы
+методы hashCode() и equals().
+
+Пример второй
+Так как ключи являются уникальными, мы можем написать следующую программу -
+сгенерируем набор случайных чисел сто раз и посчитаем количество повторов. Map легко
+решит эту задачу - в качестве ключа используется сгенерированное число, а в качестве
+значения - количество повторов.
+
+Random random = new Random(36);
+Map<Integer, Integer> hashMap = new HashMap<>();
+
+for (int i = 0; i < 100; i++){
+    // Создадим число от 0 до 10
+    int number = random.nextInt(10);
+    Integer frequency = hashMap.get(number);
+    hashMap.put(number, frequency == null ? 1 : frequency + 1);
+}
+System.out.println(hashMap);
+
+Метод get() возвращает null, если ключ отсутствует, т.е число было сгенерировано
+впервые или в противном случае метод возвращает для данного ключа ассоциированное
+значение, которое увеличивается на единицу.
+
+Пример третий
+Пример для закрепления материала. Поработаем с объектами классов.
+Нужно самостоятельно создать класс Pet и его наследников Cat, Dog, Parrot.
+
+Создадим отображение из домашних животных, где в качестве ключа выступает строка,
+а в качестве значения класс Pet.
+
+Map<String, Pet> hashMap = new HashMap<>();
+
+hashMap.put("Кот", new Cat("Мурзик"));
+hashMap.put("Собака", new Dog("Бобик"));
+hashMap.put("Попугай", new Parrot("Кеша"));
+System.out.println(hashMap);
+Pet cat = hashMap.get("Кот");
+System.out.println(cat);
+System.out.println(hashMap.containsKey("Кот"));
+System.out.println(hashMap.containsValue(cat));
+
+Многомерные отображения
+
+Контейнеры Map могут расширяться до нескольких измерений, достаточно создать
+контейнер Map, значениями которого являются контейнеры Map (значениями которых
+могут быть другие контейнеры). Предположим, вы хотите хранить информацию о
+владельцах домашних животных, у каждого из которых может быть несколько любимцев.
+Для этого нам нужно создать контейнер Map<Person, List<Pet>>.
+
+Map<Person, List<? extends Pet>> personMap = new HashMap<>();
+
+personMap.put(new Person("Иван"), Arrays.asList(new Cat("Барсик"), new Cat("Мурзик")));
+personMap.put(new Person("Маша"), Arrays.asList(new Cat("Васька"), new Dog("Бобик")));
+personMap.put(new Person("Ирина"), Arrays.asList(new Cat("Рыжик"), new Dog("Шарик"), new Parrot("Гоша")));
+
+System.out.println("personMap: " + personMap);
+System.out.println("personMap.keySet(): " + personMap.keySet());
+
+for(Person person : personMap.keySet()){
+    System.out.println(person + " имеет");
+    for (Pet pet : personMap.get(person)){
+        System.out.println("  " + pet);
+    }
+}
+
+Метод keySet() возвращает контейнер Set, содержащий все ключи из personMap, который
+используется в цикле для перебора элементов Map.
+Sparse arrays - аналог в Android
+
+Разработчик Android посчитали, что HashMap не слишком оптимизирован для мобильных
+устройств и предложили свой вариант в виде специальных массивов. Данные классы
+являются родными для Android, но не являются частью Java. Очень рекомендуют
+использовать именно Android-классы. Не все программисты знают об этих аналогах,
+а также классический код может встретиться в различных Java-библиотеках. Если вы
+увидите такой код, то заменить его на нужный. Ниже представлена таблица для замены.
+
+HashMap	                    Array class
+HashMap<K,V>	            ArrayMap<K,V>
+HashMap<Integer, Object>	SparseArray<Object>
+HashMap<Integer, Boolean>	SparseBooleanArray
+HashMap<Integer, Integer>	SparseIntArray
+HashMap<Integer, Long>	    SparseLongArray
+HashMap<Long, Object>	    LongSparseArray<Object>
+
+Подробнее о Sparse arrays
+
+Существует ещё класс HashTable, который очень похож в использовании как и HashMap.
+Дополнительное чтение
+
+Список с использованием HashMap и объектов (SimpleAdapter)
+
+//************************************************************************
+HashMap в Java с примерами
+31.12.2019Java
+
+HashMap является частью коллекции Java начиная с Java 1.2. Он обеспечивает базовую реализацию интерфейса Map Java. Хранит данные в парах (ключ, значение). Чтобы получить доступ к значению, нужно знать его ключ. HashMap известен как HashMap, потому что он использует технику, называемую Hashing. Хеширование — это метод преобразования большой строки в маленькую строку, представляющую одну и ту же строку. Более короткое значение помогает в индексации и ускоряет поиск. HashSet также использует HashMap для внутреннего использования. Он внутренне использует список ссылок для хранения пар ключ-значение, которые подробно описаны в HashSet и в других статьях.
+Несколько важных функций HashMap:
+
+    HashMap является частью пакета java.util.
+    HashMap расширяет абстрактный класс AbstractMap, который также обеспечивает неполную реализацию интерфейса Map.
+    Он также реализует интерфейс Cloneable и Serializable . K и V в вышеприведенном определении представляют Ключ и Значение соответственно.
+    HashMap не позволяет дублировать ключи, но позволяет дублировать значения. Это означает, что один ключ не может содержать более 1 значения, но более 1 ключа может содержать одно значение.
+    HashMap допускает также нулевой ключ, но только один раз и несколько нулевых значений.
+    Этот класс не дает никаких гарантий относительно порядка карты; в частности, это не гарантирует, что порядок останется постоянным с течением времени. Это примерно похоже на HashTable, но не синхронизировано.
+
+Внутренняя структура HashMap
+Внутренне HashMap содержит массив Node, а узел представлен в виде класса, который содержит 4 поля:
+    int hash
+    К ключ
+    Значение V
+    Узел следующий
+
+Видно, что узел содержит ссылку на свой собственный объект. Так что это связанный список.
+HashMap:
+
+Узел:
+
+Производительность HashMap
+Производительность HashMap зависит от 2 параметров:
+    Начальная емкость
+    Коэффициент нагрузки
+
+Как уже говорилось, Capacity — это просто количество сегментов, тогда как Initial Capacity — это емкость экземпляра HashMap при его создании. Коэффициент загрузки — это показатель, который при повторной перемотке должен быть выполнен. Перефразировка — это процесс увеличения емкости. В HashMap емкость умножается на 2. Коэффициент загрузки также является мерой того, какую долю HashMap можно заполнить перед повторной перепрошивкой. Когда количество записей в HashMap увеличивает произведение текущей емкости и коэффициента загрузки, увеличивается емкость, выполняется перефразировка. Если первоначальная емкость сохраняется выше, то перефразировка никогда не будет выполнена. Но поддерживая его выше, это увеличивает временную сложность итерации. Поэтому его следует выбирать очень умно, чтобы повысить производительность. Ожидаемое количество значений должно быть принято во внимание, чтобы установить начальную емкость. Наиболее предпочтительное значение коэффициента нагрузки составляет 0,75, что обеспечивает значительную экономию времени и пространства. Значение коэффициента нагрузки варьируется от 0 до 1.
+
+Синхронизированный HashMap
+Как сказано, HashMap не синхронизирован, то есть несколько потоков могут получить к нему доступ одновременно. Если несколько потоков обращаются к этому классу одновременно и по крайней мере один поток управляет им структурно, необходимо сделать его внешне синхронизированным. Это делается путем синхронизации некоторого объекта, который инкапсулирует карту. Если такого объекта не существует, его можно обернуть вокруг Collections.synchronizedMap (), чтобы синхронизировать HashMap и избежать случайного несинхронизированного доступа. Как в следующем примере:
+
+Map m = Collections.synchronizedMap(new HashMap(...));
+
+Теперь карта m синхронизирована.
+Итераторы этого класса работают быстро, если какая-либо модификация структуры выполняется после создания итератора, любым способом, кроме метода удаления итератора. В случае сбоя итератора он выдаст исключение ConcurrentModificationException.
+
+Конструкторы в HashMap
+HashMap предоставляет 4 конструктора, и модификатор доступа каждого является общедоступным:
+
+    HashMap (): это конструктор по умолчанию, который создает экземпляр HashMap с начальной емкостью 16 и коэффициентом загрузки 0,75.
+    HashMap (int начальная емкость): создается экземпляр HashMap с указанной начальной емкостью и коэффициентом загрузки 0,75.
+    HashMap (int начальная емкость, float loadFactor): создает экземпляр HashMap с указанной начальной емкостью и указанным коэффициентом загрузки.
+    HashMap (Карта карты): создает экземпляр HashMap с теми же отображениями, что и указанная карта.
+
+Пример:
+
+// Java-программа для иллюстрации
+// Java.util.HashMap
+import java.util.HashMap;
+import java.util.Map;
+public class GFG {
+    public static void main(String[] args)
+    {
+        HashMap<String, Integer> map
+            = new HashMap<>();
+        print(map);
+        map.put("vishal", 10);
+        map.put("sachin", 30);
+        map.put("vaibhav", 20);
+        System.out.println("Size of map is:- "
+                           + map.size());
+        print(map);
+        if (map.containsKey("vishal")) {
+            Integer a = map.get("vishal");
+            System.out.println("value for key"
+                               + " \"vishal\" is:- "
+                               + a);
+        }
+        map.clear();
+        print(map);
+    }
+    public static void print(Map<String, Integer> map)
+    {
+        if (map.isEmpty()) {
+            System.out.println("map is empty");
+        }
+        else {
+            System.out.println(map);
+        }
+    }
+}
+Выход:
+map is empty
+Size of map is:- 3
+{vaibhav=20, vishal=10, sachin=30}
+value for key "vishal" is:- 10
+map is empty
+
+Временная сложность HashMap
+HashMap обеспечивает постоянную временную сложность для базовых операций, получает
+и помещает, если хеш-функция написана правильно и правильно распределяет элементы
+между сегментами. Итерация по HashMap зависит от емкости HashMap и количества пар
+ключ-значение. По сути, оно прямо пропорционально емкости + размеру. Емкость — это
+количество сегментов в HashMap. Поэтому изначально не рекомендуется хранить большое
+количество сегментов в HashMap.
+
+Методы в HashMap
+
+    void clear (): Используется для удаления всех отображений с карты.
+    boolean containsKey (Object key): используется для возврата True, если для указанного ключа отображение присутствует на карте.
+    boolean containsValue (Object value): используется для возврата true, если один или несколько ключей сопоставлены с указанным значением.
+    Object clone (): используется для возврата поверхностной копии упомянутой хэш-карты.
+    boolean isEmpty (): Используется, чтобы проверить, является ли карта пустой или нет. Возвращает true, если карта пуста.
+    Set entrySet (): используется для возврата установленного представления хэш-карты.
+    Object get (Object key): используется для извлечения или извлечения значения, сопоставленного определенному ключу.
+    Set keySet (): используется для возврата установленного вида ключей.
+    int size (): используется для возврата размера карты.
+    Object put (Object key, Object value): используется для вставки определенного отображения пары ключ-значение в карту.
+    putAll (Карта M): используется для копирования всех элементов с одной карты на другую.
+    Удаление объекта (ключ объекта): используется для удаления значений любого конкретного ключа на карте.
+    Collection values (): используется для возврата представления Collection значений в HashMap.
+    compute (клавиша K, BiFunction <K, V> remappingFunction) : этот метод пытается вычислить сопоставление для указанного ключа и его текущего сопоставленного значения (или ноль, если текущего сопоставления нет).
+    computeIfAbsent (ключ K, функция <K> mappingFunction) : этот метод, если указанный ключ еще не связан со значением (или сопоставлен со значением NULL), пытается вычислить его значение с использованием данной функции сопоставления и вводит его в эту карту, если только значение NULL.
+    computeIfPresent (ключ K, BiFunction <K, V> remappingFunction): этот метод, если значение для указанного ключа присутствует и не равно нулю, пытается вычислить новое сопоставление, учитывая ключ и его текущее сопоставленное значение.
+    forEach (действие BiConsumer <K, V>): этот метод выполняет заданное действие для каждой записи в этой карте, пока все записи не будут обработаны или действие не вызовет исключение.
+    getOrDefault (Object key, V defaultValue): этот метод возвращает значение, которому сопоставлен указанный ключ, или defaultValue, если эта карта не содержит сопоставления для ключа.
+    слияние (ключ K, значение V, BiFunction <K, V> remappingFunction): этот метод, если указанный ключ еще не связан со значением или связан с нулевым значением, связывает его с заданным ненулевым значением.
+    putIfAbsent (ключ K, значение V): этот метод, если указанный ключ еще не связан со значением (или сопоставлен со значением NULL), связывает его с данным значением и возвращает значение NULL, иначе возвращается текущее значение.
+    replace (ключ K, значение V): этот метод заменяет запись для указанного ключа, только если она в настоящий момент сопоставлена с некоторым значением.
+    replace (ключ K, V oldValue, V newValue): этот метод заменяет запись для указанного ключа, только если в данный момент отображается на указанное значение.
+    replaceAll (функция BiFunction <K, V>): этот метод заменяет значение каждой записи на результат вызова данной функции для этой записи, пока все записи не будут обработаны или функция не выдаст исключение.

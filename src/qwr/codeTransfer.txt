@@ -1,0 +1,1109 @@
+//////////////////////////////////////////////////////////////////////////////////
+public class ClaimsToCustomer {++++++++++++++++++++++++++++++++++++++++++++++++++++++
+05-02-2021:15
+    /*
+    public static void iniGlobalParametrsLocal() {//база регистрации карточек
+        //КЗ УС БАЭС внутренний документ
+        lRctc.add(new ERcol(2,"№ п/п"));
+        lRctc.add(new ERcol(3,"КЗ "));
+        lRctc.add(new ERcol(4,"Инициатор КЗ"));
+        lRctc.add(new ERcol(5,"Обращение\n (№ письма)"));
+        lRctc.add(new ERcol(7,"Организация \n(инициатор обращения)"));
+        lRctc.add(new ERcol(8,"ФИО инициатора обращения"));
+        lRctc.add(new ERcol(9,"Инвентарный номер РД"));
+        lRctc.add(new ERcol(10,"Здание/\nСооружение"));
+        lRctc.add(new ERcol(11,"Вид СМР"));
+        lRctc.add(new ERcol(12,"Текст обращения"));
+        lRctc.add(new ERcol(13,"Номер записи в ЕОС"));
+        lRctc.add(new ERcol(14,"Номер РПИ"));
+        lRctc.add(new ERcol(15,"Примечание УС БАЭС"));
+        lRctc.add(new ERcol(2,""));
+        lRctc.add(new ERcol(2,""));
+        prnq("> Инициализация полей "+lRctc.size()+" ");
+    }//iniGlobalParametrs
+
+     */
+    //-----------------------------------------------------------------------
+05-02-2021:15 ///////////////////////////////////////////////////////////////////////
+//    private static int maxcol=0;//максимальная ширина таблицы
+//    public static ArrayList<ERcol> lRWtc = new ArrayList<>(17);
+//    public static ArrayList<ERcol> lRsxk = new ArrayList<>(17);
+//    public static ArrayList<Decor> lDcol = new ArrayList<>(15);
+05-02-2021:15 ///////////////////////////////////////////////////////////////////////
+     /**
+     * Считывание данных таблицы карточер для дальнейшего анализа
+     * берутся из файла fNameLoadClaimXslx с перечнем листов <String>lsTbl,
+     * количеством колонок анализа maxcol, смещением от шапки таблицы shiftRow
+     * варианты полей с местом записи в <ERcol>lRctc
+     * результат дописывается в ArrayList<EiClaim> lclem
+     * версия метода с созданием элемента командой NEW
+     */
+     /*
+    public static void readFileClaimsDefZ(ArrayList<EiClaim> lclem ) {
+        prnq("\nАнализируется файл :"+fNameLoadClaimXslx+"\n");
+        try(FileInputStream file = new FileInputStream(new File(fNameLoadClaimXslx)))
+        {
+            XSSFWorkbook wbook = new XSSFWorkbook(file);
+            int sheeti=wbook.getNumberOfSheets();
+            assert prnq("Кол-во листов "+sheeti+" Кол-во столбцов "+lRctc.size());
+            int nerr=0;//подсчет количества ошибок
+            int nerx=0;//подсчет прочих распознований
+//            maxcol=lRctc.size();
+            //цикл по листам
+            EiClaim itm= new EiClaim();//элемент для заполнения
+            for (int numSheet =0; numSheet<sheeti; numSheet++){//цикл по листам
+                XSSFSheet sheet = wbook.getSheetAt(numSheet);
+                boolean tSh=true;//проверяю на необходимость распознавания лист
+                for(String sns: lsTbl)if(sns.equals(sheet.getSheetName())) tSh=false;
+                if (tSh) continue;//такого листа не заявлено обхожу
+//                assert prnq("\nSheet "+sheet.getSheetName());
+
+                //создаю массив соответствия колонки документа и данных в  class ElmRDS
+                int[] cRDS =new int[lRctc.size()+1];//создаю массив соответствия
+                int brow=-1;//превая строка данных определяется после шапки таблицы
+                labelTitl:
+                for (Row row : sheet) {//цикл по строкам в поисках шапки таблицы
+//                assert prnt("\n"+row.getRowNum()+" ");
+                    for (Cell cell : row) {//цикл по ячейкам строки
+                        if (cell.getColumnIndex() > lRctc.size() ) { break;}//пропускаю лишние ячейки
+//                    prnt(" "+cell.getColumnIndex());
+                        //ищу только одно значение
+                        if (cell.getCellType()!=STRING) continue;//если не строка пропускаю
+                        for (ERcol el: lRctc) {//перебор вариантов полей
+                            if (cell.getStringCellValue().equalsIgnoreCase(el.getFname())){
+                                el.setIcol(cell.getColumnIndex());
+                                cRDS[cell.getColumnIndex()]=el.getElcl();//соответствие колонки данным
+                                brow=row.getRowNum()+shiftRow;
+                                break;
+                            }//поле найдено
+                        }//for lRctc перебор вариантов полей
+                    }//for cell цикл по ячейкам строки
+                }//for row цикл по строкам в поисках шапки таблицы
+                assert prnq("Содержимое шапки "+sheet.getSheetName()+">"+brow);
+//                for(ERcol e:lRctc)prnt(" "+e.getIcol()+"~"+e.getElcl());prnq("#");
+                prnq("Куда писать на основе поля ELCL списка колонок");
+                for(Integer i: cRDS) prnt(" "+i+" "); prnq("---");
+                //-------------------------------------------------------------------
+                int plaze=0;//индекс ячейки
+                String str = null;
+                for (Row row : sheet) {
+                    if (row.getRowNum()<brow){prnt("%");continue;} //попускаю первые строчки заголовка таблицы
+                    itm.purge();//предварительная очистка полей
+//                    assert prnt(row.getRowNum()+">");
+                    for (Cell cell : row) {
+                        if (cell.getColumnIndex() > lRctc.size() ){break;}//пропускаю ячейки
+                        plaze= cRDS[cell.getColumnIndex()];//индекс ячейки
+                        str="";
+                        if (plaze<1) continue;//пропускаю ячейки которые ни куда не пишутся
+//                        assert prnt(cell.getColumnIndex()+"/"+plaze);
+                        switch (cell.getCellType()) {
+                            case ERROR:
+//                                assert prnt("R "); nerr++;
+                                break;
+                            case BLANK:
+//                                assert prnt("b ");
+                                break;
+//                            case _NONE: assert prnt("o "); break;
+                            case NUMERIC://число
+//                                assert prnt("n ");
+                                str= String.valueOf(cell.getNumericCellValue());
+                                break;
+                            case STRING://строка
+                                if (cell.getStringCellValue().isBlank()){
+    //                                assert prnt("x ");
+                                    break;
+                                }
+  //                              assert prnt("s ");
+                                str=cell.getStringCellValue();
+                                break;
+                            case FORMULA:
+//                                assert prnt("f ");
+                                switch (cell.getCachedFormulaResultType()){
+                                    case NUMERIC:
+                                        str=String.valueOf(cell.getNumericCellValue());
+                                        break;
+                                    case STRING:
+                                        str=cell.getStringCellValue();
+                                        break;
+                                }//switch FORMULA
+                                break;//завершение анализа формулы
+                            default:
+//                                assert prnt("@ "+cell.getColumnIndex()+" ");
+                                nerx++;//счетчик непонятных распознавания
+                        }//switch
+                        itm.setstr(plaze,str);
+                        itm.setSheet(sheet.getSheetName());//записываю имя листа
+                    }//for cell
+//                    assert prnq(itm.have()+"~"+itm.prn());
+                    if (itm.have()) lclem.add(new EiClaim(itm));//если элемент существует, то беру
+                }//for row
+            }//for numsheet----------------------------------------------------------
+
+            file.close();
+            prnq("\nКоличество ячееек с ошибкой "+nerr+"  Нераспозано "+nerx+
+                    "  Подкачено "+lclem.size()+" строк\n");
+        }//чтение файла исходного документа
+        catch (Exception e){ e.printStackTrace(); }
+        finally {        }
+        //массив содержит несколько пустых строк, но избавиться от них не получается
+
+        //выполняю нумерацию работ
+        //for (Ecleam e: lclem ) e.print();
+//       for (EiClaim e: lclem) { prnq(" "+(lclem.indexOf(e)+2)+":\t"+e.prn()); }
+    }//readFileClaims----------------------------------------------------------------
+
+      */
+05-02-2021:15 ///////////////////////////////////////////////////////////////////////
+
+    /** >>перенесено в class EiClaim>have
+     * Разделение строки на составные части: ФИО автора, № письма, дата письма
+     * приэтом известно, что есть символы "№" и "от".
+     * Дата считается от 1900 года в днях?
+     */
+    /*
+    public static int  disconnection(String str){
+        prnq(">"+str+"<");
+        boolean pm=false;
+        boolean isdt=false;
+        int ipm=str.lastIndexOf('№');
+        int jdt=str.lastIndexOf("от");
+        int k=5;//количество распознанных дат в строке
+        EinStr[] eld= new EinStr[5];//делаю заготовку массива для распознанных данных
+        for (int i=0; i<eld.length; i++) eld[i] =new EinStr();
+        String snm;//имя автора
+        String nml;//номер письма
+        if (ipm>1) {//есть символ номера
+            snm=str.substring(0,ipm);
+            if (jdt>ipm){//есть признак даты
+                nml=str.substring(ipm+1,jdt);
+                k=DateTim.convertStringR(str.substring(ipm+1).concat(" "),eld);
+                for (EinStr e:eld) prnq(""+e.i+" "+e.s);
+//                return 0;
+            }else {//нет признака даты
+                snm=str;
+                nml=str.substring(ipm+1);
+//                return 0;
+            }
+        } else {//нет символа номера
+            snm=str;
+            nml=null;
+ //           return 0;
+        }
+        prnq("~~"+snm+"~~"+nml+"~~"+str.substring(ipm+1)+"^"+k);
+
+        return 0;
+    }
+
+     */
+05-02-2021:15 ///////////////////////////////////////////////////////////////////////
+
+
+
+
+
+! было!увидел!стало!действ!Возможные процессы и шаги пизменения sourc в локальной базе:
++-----+------+-----+---+------------------------------------------------------------+
+!  =  !  =   !  0  ! 0 ! новые данные для изменения( в chang ссылка на key основного)
+!  =  !  =   !  1  ! 0 ! создан на основе базовых спрвавочников (локальные данные)
+!  =  !  =   !  2  ! 0 ! создан владельцем для регистрации
+!  2  !  10  !  3  ! 0 ! элемент зарегистрирован всеми (норма)
+!  3  !  10  !  4  ! 0 ! запрос на изменение - в локальном списке создан новый элемент
+!  4  !  11  !  5  ! 1 ! разрешение сообществом изменения (квитирование)
+!  4  !  4   !  3  ! 0 ! множественный запрос на изменение- откат
+!  5  !  12  !  3  ! 0 ! изменение записались всеми (квитирование)
+!  3  !  10  !  6  ! 0 ! элемент предложен к удалению (не используется и запрещен)
+!  6  !  13  !  =  ! 2 ! процесс удаления (квитирование)
++-----+------+-----+---+------------------------------------------------------------+
+!  3  !  =   !  7  ! 0 ! запрос на передачу другому владельцу
+!  7  !  14  !  8  ! 0 ! передача другому владельцу
+!  8  !  15  !  9  ! 3 ! передача принята сообществом
+!  9  !  3   !  10 ! 4 ! квитирование передачи другому владельцу подтверждено старым 2
++-----+------+-----+---+------------------------------------------------------------+
+!  =  !  2   !  10 ! элемент получен из внешнего справочника
+!  10 !  3   !  10 ! все стабильно
+!  10 !  4   !  11 ! разрешение на изменение
+!  11 !  2   !  10 ! возврат на исходную
+!  11 !  5   !  12 ! приняты изменения (квитирование)
+!  10 !  6   !  13 ! элемент обозначен в справочниках к удалению (квитирование)
++-----+------+-----+----------------------------------------------------------------+
+!  10 !  7   !  14 ! разрешение на передачу другому владельцу (квитирование)
+!  14 !  8   !  15 ! принята переда новым владельцем (квитирование)
+!  15 !  9   !  3  ! принята переда новым владельцем для нового владельца
+!  15 !  9   !  10 ! принята переда новым владельцем для всех остальных
++-----+------+-----+----------------------------------------------------------------+
+
+Процедура изменений
+1) создается в специальном справочнике элементы соответствующие всем файлам подлежащим
+синхронизации, с идентификатором справояника в котором идет изменение, идентификатора
+записи подлежащей изменения. идентификатору записи, которая должна ее заменить ....
+Либо другой авриант -  берем запись подлежащей изменения и по ней сканируем все файлы
+ - не проходит т.к. затратно для системы и каналов связи
+ Остается  -  сканируем внешний файл и правим типы в запясях. но как узнаем в каких
+ файлах прошло изменение, а в каких- нет тогда в пуле создаем набот запьсь- файл:
+ путь файла(String), статус состояния(int), идентификатор записи(int),
+ идентификатор справочника(String).
+
+ * Базовый Элемент всех справочников
+ * имеет наименование, описание, дату создания и кто создал,
+ * флаг далее не использовать, флаг использования в проектах,
+ * при использовании в проекте ставится флаг.
+ * Флаг разрешения использования сбрасывается если флаг используется
+ * не установлен или данный флаг сброшен во внешних справочниках
+ * Если оба флага сброшены и он не используется во внешних проектах
+ * то элемент может быть удален кроме как из справочника по умолчанию.
+
+
+! было!увидел!стало! Возможные процессы и шаги пизменения sourc в локальной базе:
++-----+------+-----+----------------------------------------------------------------+
+!  =  !  =   !  1  ! создан на основе базовых спрвавочников
+!  =  !  =   !  2  ! создан владельцем для регистрации
+!  2  !  10  !  3  ! элемент зарегистрирован всеми (норма)
+! 3,4 !  =   !  4  ! элемент изменен владельцем
+!  4  !  11  !  5  ! изменение владельца квитировано всеми
+!  5  !  11  !  3  ! элемент зарегистрирован всеми (норма)-возврат
+!  3  !  =   !  6  ! элемент предложен к удалению
+!  6  !  12  !  14 ! процесс удаления
+!  3  !  =   !  7  ! элемент передан другому владельцу
+!  7  !  13  !  8  ! передача другому владельцу квитирована
+!  8  !  10  !  9  ! квитирование передачи другому владельцу подтверждено старым
+!  9  !  3   !  10 ! квитирование передачи другому владельцу подтверждено старым 2
+!  10 !  9   !  3  ! квитирование передачи другому владельцу подтверждено новым
++-----+------+-----+----------------------------------------------------------------+
+!  =  !  2,3 !  10 ! элемент получен из внешнего справочника
+!  10 !  4   !  11 ! элемент изменет владельцем (квитирование)
+!  11 !  5   !  10 ! элемент получен из внешнего справочника (снять квитирование)
+!  10 !  6   !  12 ! элемент резрешен к удалению (квитирование)
+!  10 !  7   !  13 ! элемент передан другому владельцу (квитирование)
+!  13 !  8   !  10 ! элемент передан другому владельцу (снять увитирование)
++-----+------+-----+----------------------------------------------------------------+
+
+Варианты источника и состояния записи в справочнике
+1 получена из базового справочника (не изменяема)
+2 получена из подкачки ненормированного документа
+3 введена или откорректирована из подкачки для внешенй регистрации
+4 получена из внешней регистрации обязательных справочников (жесткая оперативная синхронизация)
+5 получена из внешних регистраций проектных справочников
+-------------------------------
+6 используется в проекте определенная локально
+7 используется в проекте внешнего определения
+-------------------------------
+8 запрешено использование из внешней регистрации но используется в проекте
+9 запрешено использование из внешней регистрации в проекте Не используется
+-------------------------------
+10 запрещено использование локальной но исползуется в проекте (предлагаю исключение из проекта)
+11 запрещено использование локальной в проекте НЕ используется (проверяю внешние проекты)
+12 запрещенная локальная во внешних проектах не используется (удаляю)
+-------------------------------
+13 передаю локальную внешнему проекту (жду изменения хозяина)
+-------------------------------
+14 используемая определенная локально изменена (жду прохождения изменений во внешних)
+    если используется во внешних проектах
+
+! было!увидел!стало! Возможные процессы и шаги пизменения sourc в локальной базе:
++-----+------+-----+----------------------------------------------------------------+
+!  =  !  =   !  1  ! L создан на основе базовых спрвавочников (не изменяема)
+!  =  !  =   !  2  ! L создан из подкачки ненормированного документа
+!  =  !  =   !  3  ! L создан или откорректирована из подкачки для внешенй регистрации
++-----+------+-----+----------------------------------------------------------------+
+!  1  !  =   !  1  ! L получена из базового справочника (не изменяема)
+!  2  !  =   !  2  ! L получена из подкачки ненормированного документа
+! 2,3 !  =   !  3  ! L введена или откорректирована из подкачки для внешенй регистрации
+!  3  !  =   !  4  ! L используется в проекте определенная локально
+!  3  !  =   !  5  ! L запрещено и НЕ используется в проекте определенная локально
+!  4  !  =   !  3  ! L НЕ используется в проекте определенная локально
+!  5  ! 6,7,8! 5+16! L старт сканирования
+! 5+16! 6,7,8!  5  ! L завершение сканирования отрицательное
+! 5+16!  9   !  =  ! L удаление  (сканирование)
++-----+------+-----+----------------------------------------------------------------+
+!  =  !  3,4 !  6  ! P получена из внешних справочников НЕ используется
+!  6  !  3,4 !  7  ! P используется в проекте внешнего определения
+!  7  !  3,4 !  6  ! P получена из внешних справочников НЕ используется
+!  7  !  5   !  8  ! P запрещено,но используется в проекте внешнего определения
+!  6  !  5   !  9  ! P запрещено,НЕ используется в проекте внешнего определения
+!  8  !  5   !  9  ! P запрещено,НЕ используется в проекте внешнего определения
+!  9  !  5   ! 9+16! P старт сканирования
+! 9+16!  5   !  9  ! P завершение сканирования отрицательное
+! 9+16!  X   !  =  ! P удаление
++-----+------+-----+----------------------------------------------------------------+
+!  =  !  3   !  10 ! E получена из обязательных справочников НЕ используется
+!  10 !  3   !  11 ! E получена из обязательных справочников используется
+!  11 !  3   !  10 ! E получена из обязательных справочников НЕ используется
+!  11 !  5   !  12 ! E запрещено,но используется из обязательных справочников
+!  10 !  5   !  13 ! E запрещено и НЕ используется из обязательных справочников
+!  12 !  5   !  13 ! E запрещено и НЕ используется из обязательных справочников
+!  13 !  5   !13+16! E старт сканирования
+!13+16!  5   !  13 ! E завершение сканирования отрицательное
+!13+16!  X   !  =  ! E удаление
++-----+------+-----+----------------------------------------------------------------+
+!  3  !  6   !  14 ! L передаю локальную внешнему проекту  НЕ используется
+!  4  !  7   !  15 ! L передаю локальную внешнему проекту используется
+!  14 !  3   !  6  ! P получена из внешних справочников НЕ используется  (жду изменения хозяина)
+!  15 !  4   !  7  ! P используется в проекте внешнего определения (жду изменения хозяина)
++-----+------+-----+----------------------------------------------------------------+
+
+ /**
+     * Проверка элемента на дублирование и добавление нового в список
+     * @param array  список элементов
+     * @param words строка ввода в виде разобранного массива слов-значений полей
+     * @return  истина если проишошло изменение содержимого списка
+     */
+    public static boolean isOverlap(Map<String, InfcElm> array, String[] words){//перекрытие
+        InfcElm itm = new EiChaptr("","",0);
+        return LineGuide.isOverlap(array,words,itm);
+                                                    /*
+        if( itm.read(words)){ assert prnq("EiChaptr Error "+words);
+            BgFile.setDecompositionError();//ставлю флаг остановки анализа строки
+            return false; }
+        return LineGuide.isOverlap(array,itm);
+        /*
+        int t=0;
+        for (InfcElm vl:array.values()) if ((t=vl.merger(itm))!=0) break;
+        switch (t){
+            case 4://выходим и удалениу элемента из коллекции
+                array.remove(itm.getKey());
+                return true;
+            case 0://идем дальше по колекции = элемент не найден
+            case 3://выходим и добавляем элемент
+                array.put(itm.getKey(),itm);//добавляю элемент
+                return true;
+            case 1: return false;//  полное совпадение
+            default:
+        }
+        return true;
+
+         */
+    } //isOverlap--------------------------------------------------------------------
+///260221****************************************************************************
+произвел замену   merger(itm) на метод
+integrate(Map<String, InfcElm> array, InfcElm obj, int src)
+вычичаю код связанный с merger(itm)
+merger(itm)
+    /**
+     * подкачка внешних данных с контролем статуса. статус 3 перекрывает статус 1
+     * @param obj  дабавляемый объект к THIS коллекции
+     * @return 0 -идем дальше по колекции, 1 -полное совпадение, 2-все сделано внутри.
+     * выходим из цикла, 3-выходим и добавляем элемент, 4-выходим и удаляем элемент
+     */
+/*    public int merger(InfcElm obj) {//проверка на совпдение
+//        assert prnq(this.getClass()+" * merger> ");
+        //полное совпадение
+        if (this.compare(obj) && this.getSti()==obj.getSti()) return 1;
+        assert prnq(this.getClass()+" * merger> ");
+        //замещение данных введенных по умолчанию
+        if (this.getSti()== 4 ){
+            if (this.getTitle().equals(obj.getTitle())){//ключи совпали
+                hasp =obj.getHasp();
+                descr=obj.getDescr();
+                order=obj.getOrder();
+                stas =obj.getSti();
+                return 2; //1 - все сделано внутри. выходим из цикла
+            } //ключи совпали
+        } //замещение данных введенных по умолчанию
+
+        return 0;//
+    }//merger------------------------------------------------------------------------
+
+ */
+    public static boolean isOverlap(Map<String, InfcElm> array, String[] words, InfcElm itm){//перекрытие
+        int src= Math.toIntExact(itm.getStas());//содержит тип источника элемента от пути
+        if( itm.read(words)){ assert prnq(itm.getClass()+" > isOverlap Error "+words);
+            BgFile.setDecompositionError();//ставлю флаг остановки анализа строки
+            return false; }
+        if(LineGuide.integrate(array,itm,src)==0) return false;
+
+/*
+        int t=0;
+        for (InfcElm vl:array.values()){
+            if (vl instanceof AltTitle) continue;
+            if ((t=vl.merger(itm))!=0) break;
+        }
+        switch (t){
+            case 4://выходим и удалениу элемента из коллекции
+                array.remove(itm.getKey());
+                return true;
+            case 0://идем дальше по колекции = элемент не найден
+            case 3://выходим и добавляем элемент
+                assert prnq(itm.getClass()+"> isOverlap-3 "+itm.getHasp()+" "+itm.getTitle());
+                itm.setHasp(LineGuide.questHasp(array,itm.getHasp()));
+                array.put(itm.getKey(),itm);//добавляю элемент
+                return true;
+            case 1: return false;//  полное совпадение
+            default:
+        }
+
+ */
+ //// убираю  isOverlap  из методов кромет абстрактных
+    public static boolean isOverlap(Map<String, InfcElm> array, String[] words){//перекрытие
+        InfcElm itm = new EiHeader("","",0);
+        return LineGuide.isOverlap(array,words,itm);
+    } //isOverlap--------------------------------------------------------------------
+Рассматриваю возможность переноса функционала метода itm.read(words) в конструктор
+Произвел замену на конструктор можно убирать read(String[] words)
+сделана система подгрузки недостающих значений коллекции на основе ссылок 
+ genplan260221b
+ исходные справочники готовы приступаю к подгрузке документов
+030321 =========================================================================
+
+    @Override
+    public void parse(Map<String, LoadXlsx> array, String[] srt, int[] cRD, String sheetName) {
+//        NmbWrDocPrj obj = new NmbWrDocPrj("","",0,0);
+        NmbWrDocPrj obj = this;
+        for (int i=0; i<cRD.length; i++) {//перебор вариантов полей
+            switch (cRD[i]){
+                case 0:                break;
+                case 1: obj.title =srt[i]; break;  //2B)= номер документа
+                case 2: obj.descr =srt[i]; break;  //3I)= наименование документа
+                case 5: obj.bilds =srt[i]; break;  //7E) номер здания приведенный
+                case 6: obj.razd  =srt[i]; break;  //8F) Раздел (E)
+                case 7: obj.vidr  =srt[i]; break;  //9G) Вид (F)
+                case 8: obj.stat  =srt[i].length()<1 ? ' ' : srt[i].charAt(0);break;//10H)Статус
+                case 3: obj.izm   =Tranq.cnverti(srt[i]); break;//11C) приведенный номер изменения (* int)
+                case 4: obj.dtv   =Tranq.cnverti(srt[i]); break;//12D) дата официального получения (дней с 1970г.)
+                case 9: obj.dpv   =Tranq.cnverti(srt[i]); break;//13J) дата получения предыдущей версии
+                case 10:obj.izp   =Tranq.cnverti(srt[i]); break;//14K) номер предыдущей версии
+
+                default:prnt("EiClaim > have ~"+cRD[i]+">"+srt[i]+" ");continue;//что то пошло не так
+            }//switch
+        }//for lRctc
+        if (obj.getTitle().isBlank()) return;//проверка на пустоту
+        //проверка на совпадение ключа
+        for (LoadXlsx vl:array.values()) if (vl.getTitle().equals(obj.getTitle())) {
+            return;
+        }
+        obj.setOrder(count++);
+        obj.setStas(3);
+        obj.setHasp(LineGuide.queswHasp(array,obj.hashCode()));
+//        assert prnq("# "+obj.hashCode()+" "+obj.getKey());
+        array.put(obj.getKey(),obj); return;//добавил в список
+    }    //parse---------------------------------------------------------------------
+
+=============================================================================
+package qwr.footing;
+
+import java.util.Map;
+
+public interface LoadXlsx {
+    String  print();             //печать содержимого элемента
+    default void    parse(Map<String, LoadXlsx> lnRDoc, String[] ldsrt, int[] cRDS, String sheetName) { }
+    String  getTitle();
+    int     getHasp();
+    void    setRazd(String s);
+    String  getRazd();
+    void    setBilds(String normalize);
+    String  getBilds();
+    String  getVidr();
+    void    setVidr(String normalize);
+    String  getStag();
+    void    setStag(String normalize);
+    String  writ();
+}//interface LoadXlsx================================================================
+090321=========================================================================
+    /**
+     * интеграция данных в колекцию, кроме альтернативных (по другой ветке)
+     * @param array  коллекция для включения элемента
+     * @param obj  элемент для обработки
+     * @param src  тип источника элемента от пути:  (Заначения  typ для EiFile и EiPath)
+     *  0 - из документов и по умолчанию
+     *  1 - файлы и папки локальной базы
+     *  2 - файлы и папки внешних данных не синхронизуемых (данные берутся но не проверяются)
+     *  3,4,5,6,7. - файлы и папки внешних данных подлежащих синхронизации изменения данных
+     * @return 0 без изменений, 1 переписаны поля, 2 добавлен в список, 3 добавлен первый элемент,
+     * -1 пропускаю внешний элемент, -2 игнорирован по несответствию , -3 запрещенное состояние
+     */
+    public static int integrate(Map<String, InfcElm> array, InfcElm obj, int src){
+        assert !(obj instanceof AltTitle):"ERROR LineGuide>integrate obj is AltTitle";
+        assert array!=null:"ERROR LineGuide>integrate array is null";
+
+//        if ((obj.getWax() & 3) ==0){ assert prnq("@ LineGuide > integrate: " +
+ //               "запрещенное состояние !" +obj.getTitle()+" "+obj.getWax()); return -3; }
+        if (obj.getWax() ==13){ return -1; }// пропускаю внешний элемент
+        if (array.size()<1) { array.put(obj.getKey(),obj);
+            prnq("@ LineGuide > integrate: first element in colection !");
+            return 3;}//если колекция пуста
+        switch (src){
+            case 0://поступление из документов и по умолчанию
+                if (array.containsKey(obj.getTitle()))
+//                for (InfcElm vl:array.values()) if (vl.getTitle().equals(obj.getTitle()))
+                {
+                    InfcElm vl = array.get(obj.getTitle());
+                    //проверяю дату обновления
+                    if (vl.getDtv() < obj.getDtv()){ vl.copy(obj); return 1; }
+                    if (vl.getIzm() < obj.getIzm()){ vl.copy(obj); return 1; }
+                    return 0;
+                }  //for if  array
+
+                assert prnq("# "+obj.hashCode()+" "+obj.getKey());
+                array.put(obj.getKey(),obj);
+                return 2;
+            case 1://поступление из локальной базы
+                if (array.size()<1) { array.put(obj.getKey(),obj);
+                    prnq("@ LineGuide > integrate: first element in colection !");
+                    return 1;}//если колекция пуста
+                for (InfcElm vl:array.values()){
+                    if (vl instanceof AltTitle) continue; //обход альтернативных ключей
+                    if (vl.getTitle().equals(obj.getTitle())){ //если совпал ключ
+                        vl.copy(obj);//копируем из локальной поверх (уничтожение дублера)
+//                    assert prnq("% "+vl.getTitle());
+                        return 1;
+                    }//if найден элемент по ключу
+                } //for  array
+//            assert prnq(array.getClass()+"& "+obj.getTitle());
+                array.put(obj.getKey(),obj); return 1;//совпадений не найдено-добавляю
+        }
+        int t=0; //результат сканирования коллекциии
+
+        //проверяю источник элемента - получен из внешних баз или вновь создан
+        //от этого зависит необходимость анализа числокого ключа
+
+        if (obj.getWax()==2||obj.getWax()==4||obj.getWax()==20||obj.getWax()==17){
+            t=1;
+        //элемент создан ручным вводом(2),по умолчанию(4),из документа(20),косвенно(17)
+            for (InfcElm vl:array.values()){
+                if (vl instanceof AltTitle) continue; //обход альтернативных ключей
+                if (vl.getTitle().equals(obj.getTitle())){
+                    //проверяю описание
+                    if (vl.getDescr().equals(obj.getDescr())){ return 0; }//полное совпадение
+                    if (obj.getWax()==4) { return 0; }//по умолчанию - игнорирую
+                    if (obj.getWax()==17) { return 0; }//косвенно - игнорирую
+                    //для созданого ручным вводом(2) и из документа(20)
+                    if (obj.isAppld() || !obj.isLocal() || obj.isSynxr()){return 0;}//гнорирую
+                    //корректирую описание
+                    vl.setDescr(obj.getDescr());
+                    return 1;
+                }//if найден элемент по ключу
+            } //for  array
+            //создан локально и не найден - создаю
+            assert prnq(obj.getClass()+"> isOverlap-3 "+obj.getHasp()+" "+obj.getTitle());
+            obj.setHasp(LineGuide.questHasp(array,obj.getHasp())); //нахожу уникальный ключ
+            switch (obj.getWax()){
+                case 2:  obj.setWay(3);break;  //ручным вводом(2)
+                case 4:  obj.setWay(3);break;  //по умолчанию(4)
+                case 20: obj.setWay(3);break;  //из документа(20)
+                case 17: obj.setWay(19);break; //косвенно(17)
+            }
+            array.put(obj.getKey(),obj);//добавляю элемент
+            return 2;
+        } else { //проверяю источник элемента  --------------------------------------
+            //элемен получен из даз данных, включая локальную
+            t=3;
+            for (InfcElm vl:array.values()){
+                if (vl instanceof AltTitle) continue; //обход альтернативных ключей
+                if (vl.getTitle().equals(obj.getTitle()))
+                    {
+                        if (vl.getHasp()==(obj.getHasp())) {
+                            t=4; break;
+                        } else {
+                            t=5; break;
+                        }
+                    }
+            } //for  array
+        } //проверяю источник элемента
+        //разбираю результат сканирования коллекции
+        switch (t){
+            case 0: return 0;//полное совпадение
+            case 2: return 1;//корректирую описание
+            case 1://создан локально и не найден - создаю
+                assert prnq(obj.getClass()+"> isOverlap-3 "+obj.getHasp()+" "+obj.getTitle());
+                obj.setHasp(LineGuide.questHasp(array,obj.getHasp())); //нахожу уникальный ключ
+                array.put(obj.getKey(),obj);//добавляю элемент
+                return 1;
+
+        }
+        return 0;
+    } //integrate----------------------------------------------------------------------
+100321=================================================================================
+    /**
+     * интеграция данных в колекцию, кроме альтернативных (по другой ветке)
+     * вызывается из GrRecords.*.readRecord и  class.parse
+     * @param array  коллекция для включения элемента
+     * @param obj  элемент для обработки
+     * @param src  тип источника элемента от пути:  (Заначения  typ для EiFile и EiPath)
+     *  0 - из документов и по умолчанию
+     *  1 - файлы и папки локальной базы
+     *  2 - файлы и папки внешних данных не синхронизуемых (данные берутся но не проверяются)
+     *  3,4,5,6,7. - файлы и папки внешних данных подлежащих синхронизации изменения данных
+     * @return 0 без изменений, 1 переписаны поля, 2 добавлен в список, 3 добавлен первый элемент,
+     * -1 пропускаю внешний элемент, -2 игнорирован по несответствию , -3 запрещенное состояние
+     */
+    public static int integrate(Map<String, InfcElm> array, InfcElm obj, int src){
+        assert !(obj instanceof AltTitle):"ERROR LineGuide>integrate obj is AltTitle";
+        assert array!=null:"ERROR LineGuide>integrate array is null";
+
+//        if ((obj.getWax() & 3) ==0){ assert prnq("@ LineGuide > integrate: " +
+ //               "запрещенное состояние !" +obj.getTitle()+" "+obj.getWax()); return -3; }
+        if (obj.getWax() ==13){ return -1; }// пропускаю внешний элемент
+        if (array.size()<1) { array.put(obj.getKey(),obj);
+            prnq("@ LineGuide > integrate: first element in colection !");
+            return 3;}//если колекция пуста
+        switch (src){
+            case 0://поступление из документов и по умолчанию
+                if (array.containsKey(obj.getTitle())) {
+                    InfcElm vl = array.get(obj.getTitle());
+                    if (vl.compare(obj)){ return 0; }
+                    assert prnq("v "+vl.print());
+                    assert prnq("o "+obj.print());
+                    //проверяю дату обновления
+                    if (vl.getDtv() < obj.getDtv()){ vl.copy(obj); return 1; }
+                    if (vl.getIzm() < obj.getIzm()){ vl.copy(obj); return 1; }
+                    return 0;
+                }  //
+
+                assert prnq("# "+obj.hashCode()+" "+obj.getKey());
+                array.put(obj.getKey(),obj);
+                return 2;
+            case 1://поступление из локальной базы
+//                if (array.size()<1) { array.put(obj.getKey(),obj);prnq("@ LineGuide > integrate: first element in colection !");return 1;}//если колекция пуста
+                if (array.containsKey(obj.getTitle())) {
+                    InfcElm vl = array.get(obj.getTitle());
+
+//                for (InfcElm vl:array.values()){
+//                    if (vl instanceof AltTitle) continue; //обход альтернативных ключей
+                    if (vl.getTitle().equals(obj.getTitle())){ //если совпал ключ
+                        vl.copy(obj);//копируем из локальной поверх (уничтожение дублера)
+//                    assert prnq("% "+vl.getTitle());
+                        return 1;
+                    }//if найден элемент по ключу
+                } //for  array
+//            assert prnq(array.getClass()+"& "+obj.getTitle());
+                array.put(obj.getKey(),obj); return 1;//совпадений не найдено-добавляю
+        }
+        int t=0; //результат сканирования коллекциии
+
+        //проверяю источник элемента - получен из внешних баз или вновь создан
+        //от этого зависит необходимость анализа числокого ключа
+
+        if (obj.getWax()==2||obj.getWax()==4||obj.getWax()==20||obj.getWax()==17){
+            t=1;
+        //элемент создан ручным вводом(2),по умолчанию(4),из документа(20),косвенно(17)
+            for (InfcElm vl:array.values()){
+                if (vl instanceof AltTitle) continue; //обход альтернативных ключей
+                if (vl.getTitle().equals(obj.getTitle())){
+                    //проверяю описание
+                    if (vl.getDescr().equals(obj.getDescr())){ return 0; }//полное совпадение
+                    if (obj.getWax()==4) { return 0; }//по умолчанию - игнорирую
+                    if (obj.getWax()==17) { return 0; }//косвенно - игнорирую
+                    //для созданого ручным вводом(2) и из документа(20)
+                    if (obj.isAppld() || !obj.isLocal() || obj.isSynxr()){return 0;}//гнорирую
+                    //корректирую описание
+                    vl.setDescr(obj.getDescr());
+                    return 1;
+                }//if найден элемент по ключу
+            } //for  array
+            //создан локально и не найден - создаю
+            assert prnq(obj.getClass()+"> isOverlap-3 "+obj.getHasp()+" "+obj.getTitle());
+            obj.setHasp(LineGuide.questHasp(array,obj.getHasp())); //нахожу уникальный ключ
+            switch (obj.getWax()){
+                case 2:  obj.setWay(3);break;  //ручным вводом(2)
+                case 4:  obj.setWay(3);break;  //по умолчанию(4)
+                case 20: obj.setWay(3);break;  //из документа(20)
+                case 17: obj.setWay(19);break; //косвенно(17)
+            }
+            array.put(obj.getKey(),obj);//добавляю элемент
+            return 2;
+        } else { //проверяю источник элемента  --------------------------------------
+            //элемен получен из даз данных, включая локальную
+            t=3;
+            for (InfcElm vl:array.values()){
+                if (vl instanceof AltTitle) continue; //обход альтернативных ключей
+                if (vl.getTitle().equals(obj.getTitle()))
+                    {
+                        if (vl.getHasp()==(obj.getHasp())) {
+                            t=4; break;
+                        } else {
+                            t=5; break;
+                        }
+                    }
+            } //for  array
+        } //проверяю источник элемента
+        //разбираю результат сканирования коллекции
+        switch (t){
+            case 0: return 0;//полное совпадение
+            case 2: return 1;//корректирую описание
+            case 1://создан локально и не найден - создаю
+                assert prnq(obj.getClass()+"> isOverlap-3 "+obj.getHasp()+" "+obj.getTitle());
+                obj.setHasp(LineGuide.questHasp(array,obj.getHasp())); //нахожу уникальный ключ
+                array.put(obj.getKey(),obj);//добавляю элемент
+                return 1;
+
+        }
+        return 0;
+    } //integrate----------------------------------------------------------------------
+110321=================================================================================
+   /**
+     * интеграция данных в колекцию, кроме альтернативных (по другой ветке)
+     * вызывается из GrRecords.*.readRecord, class.parse, class.addisen
+     * @param array  коллекция для включения элемента
+     * @param obj  элемент для обработки
+     * @param src  тип источника элемента от пути:  (Заначения  typ для EiFile и EiPath)
+     *  0 - из документов и по умолчанию
+     *  1 - файлы и папки локальной базы
+     *  2 - файлы и папки внешних данных не синхронизуемых (данные берутся но не проверяются)
+     *  3,4,5,6,7. - файлы и папки внешних данных подлежащих синхронизации изменения данных
+     * @return 0 без изменений, 1 переписаны поля, 2 заменяем, 3 добавлен, 4 первый,
+     * -1 пропускаю элемент, -2 игнорирован по несответствию, -3 запрещенное состояние
+     */
+    public static int integrate(Map<String, InfcElm> array, InfcElm obj, int src){
+        assert !(obj instanceof AltTitle):"ERROR LineGuide>integrate obj is AltTitle";
+        assert array!=null:"ERROR LineGuide>integrate array is null";
+
+//        if ((obj.getWax() & 3) ==0){ assert prnq("@ LineGuide > integrate: " +
+ //               "запрещенное состояние !" +obj.getTitle()+" "+obj.getWax()); return -3; }
+        if (obj.getWax() ==13){ return -1; }// пропускаю внешний элемент
+        if (array.isEmpty()){array.put(obj.getKey(),obj); return 4;}//если колекция пуста
+        switch (src){
+            case 0://поступление из документов
+                if (array.containsKey(obj.getKey())) {
+                    InfcElm vl = array.get(obj.getKey());
+                    if (vl.compare(obj)){ return 0; }
+                    assert prnq("v "+vl.print());
+                    assert prnq("o "+obj.print());
+                    //проверяю дату обновления
+                    if (vl.getDtv() < obj.getDtv()){ vl.copy(obj); return 1; }
+                    if (vl.getIzm() < obj.getIzm()){ vl.copy(obj); return 1; }
+                    return 0;
+                }  //
+
+                assert prnq("# "+obj.hashCode()+" "+obj.getKey());
+                array.put(obj.getKey(),obj);
+                return 3;
+            case 1://поступление из локальной базы  и по умолчанию
+                if (array.containsKey(obj.getKey())) {
+                    InfcElm vl = array.get(obj.getKey());
+                    if (vl instanceof AltTitle){
+                        array.put(obj.getKey(),obj);
+                        assert prnq("@integrate :"+obj.getKey()+"~ Change AltTitle");
+                        return 2;
+                    }
+                    if (obj.getWax() != 17) {//пропускаю косвенно созданный
+                        vl.copy(obj);//копируем из локальной поверх (уничтожение дублера)
+                        return 1;
+                    }
+                    return -1;
+                }
+                array.put(obj.getKey(),obj); return 3;//совпадений не найдено-добавляю
+        }
+        int t=0; //результат сканирования коллекциии
+
+        //проверяю источник элемента - получен из внешних баз или вновь создан
+        //от этого зависит необходимость анализа числокого ключа
+
+120321===============================================================================
+
+
+    /** ТЕСТИРОВАНИЕ МЕТОДОВ
+     * разложение строки на составные и помещение их на места
+     */
+    public void determSrtFio(){
+        assert prnq(" "+this.fio);
+        //очистка строки от непечатных символов
+        if (this.fio.length()<1) return;
+        String s=this.fio.trim();
+        int length = s.length();
+        char[] y = new char[length+1];
+        int newLen = 0;
+        y[newLen]= s.charAt(newLen++);//извлечение символа по индексу
+        for (int  j = newLen ; j < length; j++) {
+            char ch=s.charAt(j);
+            if ((ch > 32) || (ch==32 && y[newLen-1]>32)) {
+                y[newLen] = ch;
+                newLen++;
+            }
+        }
+        String x = new String(y, 0, newLen);
+        prnq("\n"+x);
+        //---------------------------------------------------------------------------
+
+        //проверяю на цифры, № и символ о или О
+        int ln=0;
+        for (int j = 0; j < x.length(); j++) {
+            char c = x.charAt(j);
+            if (c>='0' && c<='9') {ln=j; break;}
+            if (c=='№') { ln=j+1; break;}
+        }//for string X
+        if ( ln==0 ) {//нет ни цифр ни №
+            fio=x;
+            nmail=null;
+            dmail=0;
+        } else {//есть цифра
+            fio=x.substring(0,ln-2);
+            int j=DateTim.convertStringR(x.substring(ln).concat(" "));
+            if (j>3) {//есть признак даты
+                nmail=x.substring(ln,x.lastIndexOf("от"));
+                dmail=j;
+            } else {//нет признака даты
+                nmail=x.substring(ln);
+                dmail=0;
+            }
+        }
+        /*
+        int ipm=x.lastIndexOf('№');
+        if (ipm>1) {//есть символ номера
+            fio=x.substring(0,ipm);
+            int j=DateTim.convertStringR(x.substring(ipm+1).concat(" "));
+            if (j>3) {//есть признак даты
+                nmail=x.substring(ipm+1,x.lastIndexOf("от"));
+                dmail=j;
+            } else {//нет признака даты
+                nmail=x.substring(ipm+1);
+                dmail=0;
+            }
+        } else {//нет символа номера
+            fio=x;
+            nmail=null;
+        }
+
+         */
+        prnq(">"+fio+"\t>"+nmail+"\t>"+dmail);
+
+
+
+
+    }//determSrtFio
+140321==============================================================================
+добавил level   extends TreeGuide>>
+public static final int sizeAr=8;//количество полей в текстовом файле данных
+
+240321==============================================================================
+/**
+ * карточка Заказчика содержащая список вопросов с привязкой к письмам
+ */
+package qwr.model.nexus;
+
+import qwr.footing.InfcElm;
+import qwr.footing.LineGuide;
+import qwr.footing.ListElm;
+import qwr.footing.Ticked;
+
+import java.util.ArrayList;
+
+public class ECard extends qwr.footing.Ticked implements ListElm, InfcElm {
+    public static ArrayList<ListElm> lst =new ArrayList<>(2) {
+    };//чертежи
+    public static final int sizeAr=5;//количество полей в текстовом файле данных
+    private static int count=1;//cчетчик для элементов по умолчанию
+    // int       hasp;  //1)ключ, время создания записи в секундах с 1 января 1970г.
+    // String    title; //2)номер карточки
+    // String    descr; //3)описание элемента
+    // long      way;   //4) состояние элемента  1-по умолчанию 3-из локальных
+    // int       order; //5)порядок следования
+    //----------------------
+    // int     ancei;  //6 )КЛЮЧ предок
+    // int     level;  //7 )уровень вложенности
+    // int     owner;  //8 )идентификатор создателя записи
+    // int     chang;  //9 )время редактирования записи в секундах с 1 января 1970г.
+    // int     itypf;  //10)
+    // int     ityps;  //11)
+    // int     itypt;  //12)
+    // String  link;   //13)ссылка на содержание
+    // String  notes;  //14)примечание Статус, резолюция письма
+    //-----------------------
+    private String  adrs;   //16)адресат
+    private String  auth;   //17)исполнитель письма письма(* String)
+    private String  sign;   //18)кто подписал исходящее
+    private ArrayList<Integer> mails;  //список писем
+    private ArrayList<Integer> xxxx;    //список замечаний
+    //конструкторы-----------------------------------------------------------------
+    public          ECard() { super("", "", 0L, -1);
+        adrs =""; auth =""; sign =""; } //EMail---------
+
+    public          ECard(String title,  long way, int order) {
+        super(title, "@", way, order);
+        adrs =""; auth =""; sign ="";
+    }
+
+    @Override
+    public String   print() {
+        return super.print();
+    }
+
+    @Override
+    public String   getKey() { return title; }
+    public boolean  addElm(){ return super.addElm(lst,this); } //addElm
+}   //class ECleam ==================================================================
+270321================================================================================
+
+    protected int addElm(ArrayList<ListElm> ml, Map<Integer, ListElm> mi, Map<String, ListElm> ms, int src) {
+        assert ml !=null:"ERROR LineGuide>addElm lst is null";
+        assert mi!=null:"ERROR LineGuide>addElm lsti is null";
+        assert ms!=null:"ERROR LineGuide>addElm lsts is null";
+        if (this.way ==13){ return -1; }// пропускаю внешний элемент
+        if (ml.isEmpty()){
+            if (!mi.isEmpty()){
+                assert prnq("@ LineGuide>addElm FIRST lstI is not clear");
+                mi.clear();
+            }
+            if (!ms.isEmpty()){
+                assert prnq("@ LineGuide>addElm FIRST lstS is not clear");
+                ms.clear();
+            }
+            assert prnq("@ LineGuide>addElm FIRST");
+            ml.add(this);
+            this.order=0;
+            mi.putIfAbsent(this.hasp,this); //==null if add normal
+            ms.putIfAbsent(this.title,this);
+            return 4;
+        }//если колекция пуста
+        //поиск свободного ключа
+        boolean qk,qt,qh=true; //совпадений не найдено
+        int j=this.hasp;
+        do { qk=false; if (mi.containsKey(j)) { j--; qk=true; qh=false;} } while (qk);
+        qt=!ms.containsKey(this.title);//совпадений не найдено
+        ListElm o = null;  //ссылка на найденный элемент при совпадении
+        if (!qt) o= ms.get(this.title); //при совпадении title
+        assert prnq("@ "+qt+"\t"+qh+"\t"+j);
+        //анализ
+        switch (src){ //ветвление по источнику элемента
+            case 0://поступление из документов ~ вторичный ввод только по title
+                if (qt){ //совпадений не найдено-добавляю
+                    ml.add(this);
+                    int k=ml.indexOf(this);
+                    this.order=k;
+                    mi.putIfAbsent(this.hasp,this);
+                    ms.putIfAbsent(this.title,this);
+                    assert prnq("@ LineGuide>addElm ADD " +k);
+                    return 3;// добавлен
+                } //совпадений не найдено-добавляю
+                if (o.compare(this)) { //объекты идентичны
+                    assert prnq("@ LineGuide>addElm DUBLE");
+                    return -1; //пропускаю элемент
+                } //объекты идентичны
+                if (o.isLocal() && !o.isSynxr()){//локальный не синхронизирован
+                    assert prnq("@ LineGuide>addElm OVERLAY");
+                    o.overlap(this); //переписаны поля
+                    return 1; //переписаны поля
+                } //локальный не синхронизирован
+                assert prnq("@ LineGuide>addElm IGNORE");
+                return -2; //пропускаю элемент
+            case 1://поступление из локальной базы  и по умолчанию ~ первичный ввод
+                qt =ms.putIfAbsent(this.title,this)==null;//совпадений не найдено-добавляю
+                qh =mi.putIfAbsent(this.hasp,this)==null;
+                if (qt && qh) {
+                    ml.add(this);
+                    int k=ml.indexOf(this);
+                    this.order=k;
+                    assert prnq("@ LineGuide>addElm ADD " +k);
+                    return 3;// добавлен
+                }
+                assert prnq("@ LineGuide>addElm IGNORE");
+                return -1; //пропускаю элемент
+            case 2: //поступление из внешних данных не синхронизуемых
+            case 3: //поступление из внешних данных синхронизуемых
+                qt =ms.putIfAbsent(this.title,this)==null;//совпадений не найдено-добавляю
+                qh =mi.putIfAbsent(this.hasp,this)==null;
+                if (qt && qh) {//hasp=Н title=Н ) это новый элемен. Добавляю элемент в коллекци
+                    ml.add(this);
+                    int k=ml.indexOf(this);
+                    this.order=k;
+                    assert prnq("@ LineGuide>addElm ADD " +k);
+                    return 3;// добавлен
+                }//hasp=Н title=Н
+                if (!qt && !qh) {//hasp=Д title=Д ) правильный элемент, корректирую поля
+                   o = mi.get(this.hasp);
+                   if (o.compare(this)){//объекты идентичны. анализируем только way.
+                       assert prnq("@ LineGuide>addElm OVER-WAY");
+                       return 0;  //переписаны поля
+                   } else  { //объекты НЕ идентичны.
+                       assert prnq("@ LineGuide>addElm OVERLAP");
+                       return 1;  //переписаны поля
+                   }
+                }//hasp=Д title=Д
+                if (!qt && qh) {//hasp=Д title=Н ) наложение ключей
+                    o = mi.get(this.hasp);
+                    if (o.isLocal() && !o.isSynxr()){//изменяю его ключ с корректировкой связей
+                        assert prnq("@ LineGuide>addElm OVER-KEY");
+                        return 2; //2 заменяем
+                    }
+                    assert prnq("@ LineGuide>addElm IGNORE-KEY");
+                    return -1; //пропускаю элемент
+                }//hasp=Д title=Н
+                if (qt && !qh) {//hasp=Н title=Д ) один элемент имеет несколько ключей.
+                    o = ms.get(this.title);//Избавляюсь от дублирования.
+                    if (o.isSynxr() && !this.isSynxr()){//оставляю как есть
+                        assert prnq("@ LineGuide>addElm IGNORE");
+                        return -1; //пропускаю элемент
+                    }
+                    if (!o.isSynxr() && this.isSynxr()) {//принимаю новый элемент
+                        assert prnq("@ LineGuide>addElm OVERLAP");
+                        o.replace(this,src);//замещение
+                        return 2; //2 заменяем
+                    }
+                    if (o.isActul() && !this.isActul()){ //оставляю как есть
+                        assert prnq("@ LineGuide>addElm IGNORE");
+                        return -1; //пропускаю элемент
+                    }
+                    if (!o.isActul() && this.isActul()){//принимаю новый элемент
+                        assert prnq("@ LineGuide>addElm OVERLAP");
+                        o.replace(this,src);//замещение
+                        return 2; //2 заменяем
+                    }
+                    if (o.isAppld() && !this.isAppld()){ //оставляю как есть
+                        assert prnq("@ LineGuide>addElm IGNORE");
+                        return -1; //пропускаю элемент
+                    }
+                    if (!o.isAppld() && this.isAppld()){//принимаю новый элемент
+                        assert prnq("@ LineGuide>addElm OVERLAP");
+                        o.replace(this,src);//замещение
+                        return 2; //2 заменяем
+                    }
+                    if (o.getHasp()> this.getHasp()){
+                        assert prnq("@ LineGuide>addElm OVERLAP");
+                        o.replace(this,src);//замещение
+                        return 2; //2 заменяем
+                    }
+                    assert prnq("@ LineGuide>addElm IGNORE");
+                    return -1; //пропускаю элемент
+                }//hasp=Н title=Д
+            default: prnq("NO DEFINE SOURCE "+src); return -4;
+        } //switch
+    } //addElm-----------------------------------------------------------------------
+
+   /**
+     * интеграция данных в колекцию, кроме альтернативных (по другой ветке)
+     * вызывается из GrRecords.*.readRecord, class.parse, class.addisen
+     * @param array  коллекция для включения элемента
+     * @param obj  элемент для обработки
+     * @param src  тип источника элемента от пути:  (Заначения  typ для EiFile и EiPath)
+     *  0 - из документов и по умолчанию
+     *  1 - файлы и папки локальной базы
+     *  2 - файлы и папки внешних данных не синхронизуемых (данные берутся но не проверяются)
+     *  3,4,5,6,7. - файлы и папки внешних данных подлежащих синхронизации изменения данных
+     * @return 0 без изменений, 1 переписаны поля, 2 заменяем, 3 добавлен, 4 первый,
+     * -1 пропускаю элемент, -2 игнорирован по несответствию, -3 запрещенное состояние
+     */
+
+    public static int addition(ArrayList<ListElm> array, ListElm obj, int src) {
+        assert !(obj instanceof AltTitle):"ERROR LineGuide>addition obj is AltTitle";
+        assert array!=null:"ERROR LineGuide>addition array is null";
+//        assert prnq("@ LineGuide>addition "+src);
+        if (obj.getWax() ==13){ return -1; }// пропускаю внешний элемент
+        if (array.isEmpty()){
+            assert prnq("@ LineGuide>addition FIRST");
+            obj.addElm();
+            return 4;
+        }//если колекция пуста
+        switch (src){ //ветвление по источнику элемента
+            case 0://поступление из документов
+                prnq("NO DEFINE SOURCE "+src);
+                return -4;
+            case 1://поступление из локальной базы  и по умолчанию
+                if ( ! array.contains(obj)) {
+                    obj.addElm();
+                    assert prnq("@ LineGuide>addition ADD");
+                    return 3; }// добавлен
+                int i=   array.indexOf(obj);//получил индекс массива
+                if (obj.getWax() != 17) {//пропускаю косвенно созданный
+                    array.get(i).overlap(obj);//копируем из локальной поверх (уничтожение дублера)
+                    assert prnq("@ LineGuide>addition OVERLAP");
+                    return 1;  //переписаны поля
+                }
+                assert prnq("@ LineGuide>addition IGNORE");
+                return -1; //пропускаю элемент
+            case 2: //поступление из внешних данных не синхронизуемых
+                if ( ! array.contains(obj)) {
+                    obj.addElm(); return 3; }// добавлен
+                return -1; //пропускаю элемент
+
+            default: prnq("NO DEFINE SOURCE "+src); return -4;
+        } //switch
+    }//addition----------------------------------------------------------------------
+
